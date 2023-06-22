@@ -1,0 +1,387 @@
+---
+title: "Modelagem 02"
+author: "Panosso AR & Oliveira JA"
+date: "2023-05-16"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      error = FALSE,
+                      warning = FALSE)
+library(tidyverse)
+library(lubridate)
+library(ggpubr)
+library(sf)
+source("../R/my-functions.R")
+```
+
+```{r}
+atencao_basica <- read_rds("../data/atencao_basica.rds") 
+glimpse(atencao_basica)
+```
+
+```{r}
+atencao_basica %>% filter(ano > 2007)
+```
+
+
+### Gráficos Cobertura Total
+
+#### Proporção
+```{r}
+atencao_basica %>% filter(ano > 2007) %>% 
+  mutate(ano_mes = make_date(year=ano, month=mes, day = 1)) %>% 
+  group_by(ano_mes) %>% 
+  summarise(
+    cobertura_total_p = mean(proporcao_cobertura_total_atencao_basica)
+  ) %>% 
+  ggplot(aes(x = ano_mes, y=cobertura_total_p)) +
+  geom_line() +
+  theme_bw()
+```
+
+```{r}
+atencao_basica %>% filter(ano > 2007) %>%
+  mutate(ano_mes = make_date(year=ano, month=mes, day = 1)) %>%
+  group_by(ano_mes) %>%
+  summarise(
+    cobertura_total_p = mean(proporcao_cobertura_total_atencao_basica)
+  ) %>%
+  ggscatter(
+    x = "ano_mes", y = "cobertura_total_p",
+    color = "black",
+    add = "reg.line"
+  ) +
+  stat_regline_equation()+
+  theme( legend.position = "none")
+```
+
+#### Projeção da Série
+
+```{r}
+previsao_atencao_basica(proporcao_cobertura_total_atencao_basica,2012,2030,9)
+```
+
+#### População
+```{r}
+atencao_basica %>% filter(ano > 2007) %>% 
+  mutate(ano_mes = make_date(year=ano, month=mes, day = 1)) %>% 
+  group_by(ano_mes) %>% 
+  summarise(
+    cobertura_total = mean(populacao_coberta_total_atencao_basica)
+  ) %>% 
+  ggplot(aes(x = ano_mes, y=cobertura_total)) +
+  geom_line() +
+  theme_bw()
+```
+
+```{r}
+atencao_basica %>% filter(ano > 2007) %>%
+  mutate(ano_mes = make_date(year=ano, month=mes, day = 1)) %>%
+  group_by(ano_mes) %>%
+  summarise(
+    cobertura_total = mean(populacao_coberta_total_atencao_basica)
+  ) %>%
+  ggscatter(
+    x = "ano_mes", y = "cobertura_total",
+    color = "black",
+    add = "reg.line"
+  ) +
+  stat_regline_equation()+
+  theme( legend.position = "none")
+```
+
+#### Projeção da Série
+
+```{r}
+previsao_atencao_basica(populacao_coberta_total_atencao_basica,2015,2030,9)
+```
+
+### Gráficos Estratégia Saude Familia
+
+#### Proporção
+```{r}
+atencao_basica %>% filter(ano > 2007) %>% 
+  mutate(ano_mes = make_date(year=ano, month=mes, day = 1)) %>% 
+  group_by(ano_mes) %>% 
+  summarise(
+    estrategia_saude_familia_p = mean(proporcao_cobertura_estrategia_saude_familia)
+  ) %>% 
+  ggplot(aes(x = ano_mes, y=estrategia_saude_familia_p)) +
+  geom_line() +
+  theme_bw()
+```
+
+```{r}
+atencao_basica %>% filter(ano > 2007) %>%
+  mutate(ano_mes = make_date(year=ano, month=mes, day = 1)) %>%
+  group_by(ano_mes) %>%
+  summarise(
+    estrategia_saude_familia_p = mean(proporcao_cobertura_estrategia_saude_familia)
+  ) %>%
+  ggscatter(
+    x = "ano_mes", y = "estrategia_saude_familia_p",
+    color = "black",
+    add = "reg.line"
+  ) +
+  stat_regline_equation()+
+  theme( legend.position = "none")
+```
+
+#### Projeção da Série
+
+```{r}
+previsao_atencao_basica(proporcao_cobertura_estrategia_saude_familia,2015,2030,12)
+```
+
+#### População
+```{r}
+atencao_basica %>% filter(ano > 2007) %>% 
+  mutate(ano_mes = make_date(year=ano, month=mes, day = 1)) %>% 
+  group_by(ano_mes) %>% 
+  summarise(
+    estrategia_saude_familia = mean(populacao_coberta_estrategia_saude_familia)
+  ) %>% 
+  ggplot(aes(x = ano_mes, y=estrategia_saude_familia)) +
+  geom_line() +
+  theme_bw()
+```
+
+```{r}
+atencao_basica %>% filter(ano > 2007) %>%
+  mutate(ano_mes = make_date(year=ano, month=mes, day = 1)) %>%
+  group_by(ano_mes) %>%
+  summarise(
+    estrategia_saude_familia = mean(populacao_coberta_estrategia_saude_familia)
+  ) %>%
+  ggscatter(
+    x = "ano_mes", y = "estrategia_saude_familia",
+    color = "black",
+    add = "reg.line"
+  ) +
+  stat_regline_equation()+
+  theme( legend.position = "none")
+```
+
+#### Projeção da Série
+
+```{r}
+previsao_atencao_basica(populacao_coberta_estrategia_saude_familia,2007,2030,9)
+```
+
+### Gráficos das Proporçoes
+
+```{r}
+atencao_basica  %>% 
+  filter(ano > 2007) %>%
+  mutate(ano_mes = make_date(year=ano, month=mes, day = 1)) %>% 
+  select(ano_mes,proporcao_cobertura_estrategia_saude_familia,proporcao_cobertura_total_atencao_basica) %>% 
+  group_by(ano_mes) %>%
+  summarise(
+    cobertura_familia = mean(proporcao_cobertura_estrategia_saude_familia),
+    cobertura_total = mean(proporcao_cobertura_total_atencao_basica)
+  ) %>% 
+  pivot_longer(cols = c("cobertura_familia","cobertura_total"),
+               names_to = "tipo",
+               values_to = "valor") %>% 
+  ggscatter(
+    x = "ano_mes", y = "valor",
+    color = "tipo", palette = "jco",
+    add = "reg.line"
+  ) +
+  facet_wrap(~as.factor(tipo),scales = "free") +
+  #stat_cor() + 
+  stat_regline_equation()+
+  theme( legend.position = "none")
+```
+
+```{r}
+coeff <- 1
+atencao_basica %>% 
+  filter(ano > 2007) %>%
+  mutate(ano_mes = make_date(year=ano, month=mes, day = 1)) %>%
+  group_by(ano_mes) %>%
+  summarise(
+    cobertura_familia = mean(proporcao_cobertura_estrategia_saude_familia),
+    cobertura_total = mean(proporcao_cobertura_total_atencao_basica)
+  ) %>% 
+  ggplot(aes(x = ano_mes)) +
+  geom_line(aes(y = cobertura_familia), color="red") +
+  geom_line(aes(y = cobertura_total/coeff)) +
+  scale_y_continuous(
+    name = "cobertura_familia",
+    sec.axis = sec_axis(~.*coeff, name="cobertura_total")
+  ) +
+  theme_bw()
+```
+### Gráficos das Quantidades
+
+```{r}
+atencao_basica  %>% 
+  filter(ano > 2007) %>%
+  mutate(ano_mes = make_date(year=ano, month=mes, day = 1)) %>% 
+  select(ano_mes,quantidade_equipes_saude_familia ,quantidade_equipes_atencao_basica_total) %>% 
+  group_by(ano_mes) %>%
+  summarise(
+    equipes_familia = sum(quantidade_equipes_saude_familia),
+    equipes_total = sum(quantidade_equipes_atencao_basica_total)
+  ) %>% 
+  pivot_longer(cols = c("equipes_familia","equipes_total"),
+               names_to = "tipo",
+               values_to = "valor") %>% 
+  ggscatter(
+    x = "ano_mes", y = "valor",
+    color = "tipo", palette = "jco",
+    add = "reg.line"
+  ) +
+  facet_wrap(~as.factor(tipo),scales = "free") +
+  #stat_cor() + 
+  stat_regline_equation()+
+  theme( legend.position = "none")
+```
+
+```{r}
+coeff <-1
+atencao_basica %>% 
+  filter(ano > 2007) %>%
+  mutate(ano_mes = make_date(year=ano, month=mes, day = 1)) %>%
+  group_by(ano_mes) %>%
+  summarise(
+    equipe_familia = sum(quantidade_equipes_saude_familia),
+    equipe_total = sum(quantidade_equipes_atencao_basica_total)
+  ) %>% 
+  ggplot(aes(x = ano_mes)) +
+  geom_line(aes(y = equipe_familia), color="red") +
+  geom_line(aes(y = equipe_total/coeff)) +
+  scale_y_continuous(
+    name = "equipe_familia",
+    sec.axis = sec_axis(~.*coeff, name="equipe_total")
+  ) +
+  theme_bw()
+```
+
+### Teste de BETA
+
+```{r}
+atencao_basica %>% filter(ano > 2007) %>% 
+  mutate(ano_mes = make_date(year=ano, month=mes, day = 1)) %>% 
+  group_by(nome, ano_mes) %>% 
+  summarise(
+    cobertura_total_p = mean(proporcao_cobertura_total_atencao_basica)
+  ) %>% 
+  group_by(nome) %>% 
+  mutate(
+    beta = my_regs(ano_mes,cobertura_total_p)
+  ) %>% 
+  group_by( nome ) %>% 
+  summarise(
+    beta = mean(beta)
+  ) 
+  # ungroup() %>% 
+  # pull(beta) %>% mean()
+```
+
+```{r}
+atencao_basica_beta <- atencao_basica %>% filter(ano > 2007) %>% 
+  mutate(ano_mes = make_date(year=ano, month=mes, day = 1)) %>% 
+  group_by(nome, id_municipio, ano_mes) %>% 
+  summarise(
+    cobertura_total_p = mean(proporcao_cobertura_total_atencao_basica), 
+cobertura_total = mean(populacao_coberta_total_atencao_basica),
+estrategia_saude_familia_p = mean(proporcao_cobertura_estrategia_saude_familia),
+estrategia_saude_familia = mean(populacao_coberta_estrategia_saude_familia)
+  ) %>% 
+  # group_by(nome,ano_mes) %>% 
+  mutate(across(cobertura_total_p:estrategia_saude_familia, 
+                ~my_regs(ano_mes,.))) %>% 
+  group_by(nome, id_municipio) %>% 
+  summarise(
+    cobertura_total_p = mean(cobertura_total_p), 
+cobertura_total = mean(cobertura_total),
+estrategia_saude_familia_p = mean(estrategia_saude_familia_p),
+estrategia_saude_familia = mean(estrategia_saude_familia)
+  )
+```
+
+
+
+## Mapeando
+
+```{r}
+variaveis <- c("cobertura_total_p",
+               "cobertura_total",
+               "estrategia_saude_familia_p",
+               "estrategia_saude_familia")
+
+map(variaveis, ~{
+atencao_basica_beta %>%
+  ggplot(aes_string(x=.x)) +
+  geom_histogram(color="black",
+                 fill="lightgray") +
+  theme_bw()  
+  
+})
+
+atencao_basica_beta %>%
+  ggplot(aes(x=cobertura_total_p)) +
+  geom_histogram(color="black",
+                 fill="lightgray") +
+  theme_bw()
+```
+
+
+```{r}
+atencao_basica_beta %>% pull(cobertura_total_p) %>% summary()
+```
+
+### Juntando as bases de dados
+
+```{r}
+d_sf_municipio <- st_read("../shp/35MUE250GC_SIR.shp", quiet = TRUE)
+d_sf_municipio <- d_sf_municipio %>%
+  rename(id_municipio = CD_GEOCMU) %>%
+  inner_join(atencao_basica_beta %>%
+               relocate(id_municipio), "id_municipio") %>%
+  mutate(
+    # classe_gini = cut(indice_gini_beta,7),
+    classe_cobertura_total_p = ifelse(cobertura_total_p > 0.0059,
+                         "Aumento",ifelse(cobertura_total_p > -0.0005,
+                                        "Constante","Queda"))
+         )
+```
+
+
+```{r}
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = cobertura_total_p))+
+  theme_minimal() +
+  scale_fill_viridis_c()
+```
+
+```{r}
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = classe_cobertura_total_p))+
+  theme_minimal() +
+  scale_fill_manual(values = c("blue2","chartreuse4","coral2"))
+```
+
+
+```{r}
+purrr::map(variaveis, ~ {
+  ggplot(d_sf_municipio) +
+    geom_sf(aes_string(fill = .x)) +
+    theme_minimal() +
+    labs(fill="")+
+    ggtitle(.x) +
+    scale_fill_viridis_c()
+})
+
+```
+
+
+
+

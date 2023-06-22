@@ -1,0 +1,100 @@
+---
+title: "Modelagem Saude-Sisvan"
+author: "Panosso AR & Oliveira JA"
+date: "2023-05-03"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      error = FALSE,
+                      warning = FALSE)
+```
+
+ 
+### Carregando pacotes
+```{r}
+library(tidyverse)
+library
+library(Kendall)
+```
+
+
+
+### Saude estado nutricional
+
+
+```{r}
+im_pbf <- read_rds("../data/im.rds") %>% 
+  rename(municipio = nome)
+glimpse(im_pbf)
+```
+
+## Gráficos
+
+```{r}
+im_pbf %>% 
+  mutate(ano_mes = make_date(year=ano,month=mes,day=1)) %>% 
+  group_by(ano_mes) %>% 
+  summarise(qnt_familias = sum(familias_beneficiarias_pbf, na.rm=TRUE),
+            qnt_pessoas = sum(pessoas_beneficiarias_pbf, na.rm=TRUE),
+            valor = sum(valor_pago_pbf, na.rm=TRUE),
+            ) %>% 
+  ggplot(aes(x=ano_mes, y=qnt_familias)) +
+  geom_line() +
+  theme_bw()
+```
+```{r}
+im_pbf %>% 
+  mutate(ano_mes = make_date(year=ano,month=mes,day=1)) %>% 
+  group_by(ano_mes) %>% 
+  summarise(qnt_familias = sum(familias_beneficiarias_pbf, na.rm=TRUE),
+            qnt_pessoas = sum(pessoas_beneficiarias_pbf, na.rm=TRUE),
+            valor = sum(valor_pago_pbf, na.rm=TRUE),
+            ) %>% 
+  ggplot(aes(x=ano_mes, y=valor)) +
+  geom_line() +
+  theme_bw()
+```
+
+
+```{r}
+dados<-im_pbf %>% 
+  mutate(ano_mes = make_date(year=ano,month=mes,day=1)) %>% 
+  group_by(ano_mes) %>% 
+  summarise(qnt_familias = sum(familias_beneficiarias_pbf, na.rm=TRUE),
+            qnt_pessoas = sum(pessoas_beneficiarias_pbf, na.rm=TRUE),
+            valor = sum(valor_pago_pbf, na.rm=TRUE),
+            )
+media_movel <- ma(dados %>% pull(valor) , order =12)
+(media_movel) %>% plot
+
+media_movel <- ma(dados %>% pull(qnt_familias) , order =12)
+(media_movel) %>% plot
+
+
+Kendall::Kendall(1:length(dados %>% pull(qnt_familias)), dados %>% pull(qnt_familias))
+```
+
+```{r}
+im_pbf %>% filter(ano >= 2018 & ano <= 2019) %>% 
+  mutate(ano_mes = make_date(year=ano,month=mes,day=1)) %>% 
+  group_by(ano_mes) %>% 
+  summarise(qnt_familias = sum(familias_beneficiarias_pbf, na.rm=TRUE),
+            qnt_pessoas = sum(pessoas_beneficiarias_pbf, na.rm=TRUE),
+            valor = sum(valor_pago_pbf, na.rm=TRUE),
+            ) %>% 
+  ggplot(aes(x=ano_mes, y=qnt_pessoas)) +
+  geom_line() +
+  theme_bw()
+```
+
+## gerar com linhas 
+## tendecias das categorais
+## fazer as regressões (inclusive gerar as tendencias não correlacionadas dos resíduos)
+## algumas correlações entre os relatórios, para ver tendendicas conjuntas.
+## Isso é série temporal vouprecisar ver como se faz as analises
+

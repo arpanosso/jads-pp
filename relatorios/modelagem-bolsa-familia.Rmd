@@ -1,0 +1,248 @@
+---
+title: "Modelagem Bolsa Família"
+author: "Panosso AR & Oliveira JA"
+date: "2023-05-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      error = FALSE,
+                      warning = FALSE)
+```
+
+## Hipótese
+
+ + A relação entre o número de famílias e o valor do auxílio com a taxa de evasão escolar.
+ + A relação entre o número de famílias e o valor do auxílio com os índices de insegurança alimentar e nutricioanl.
+ + A relação entre o número de famílias e o valor do auxílio com os índices de vulnerabilidade.
+ 
+## Resultados esperados
+
+ + Caso o numero de evasão diminuir, temos uma efetividade do programa, caso contrário existe uma ineficiência dos recursos, nesse caso será necessário a proposição de um indicador de avaliação e processo.
+ + Caso o estado nutricional das crianças e adolescente melhorar, temos uma efetividade do programa, caso contrário existe uma ineficiência dos recursos, nesse caso será necessário a proposição de um indicador de avaliação e processo.
+ + Caso oindices de probreza e extrema pobreza melhorarem, temos uma efetividade do programa, caso contrário existe uma ineficiência dos recursos, nesse caso será necessário a proposição de um indicador de avaliação e processo.
+ 
+ 
+ ### Carregando pacotes
+```{r}
+library(tidyverse)
+```
+ 
+### Entrada de dados
+
+```{r}
+im <- readr::read_rds("../data/im.rds")
+vul <- readr::read_rds("../data/vulnerabilidade.rds")
+saude <- readr::read_rds("../data-raw/estado_nutricional.rds")
+glimpse(saude)
+```
+
+ 
+### Visualização para o Estado 
+
+```{r}
+im %>% 
+  group_by(ano, nome) %>% filter(ano <= 2019) %>% 
+  summarise(
+    nfamilia = mean(familias_beneficiarias_pbf, na.rm=TRUE),
+    valor_pago = mean(valor_pago_pbf, na.rm=TRUE)
+  ) %>% 
+    group_by(ano) %>% 
+  summarise(
+    nfamilia = sum(nfamilia, na.rm=TRUE),
+    valor_pago = sum(valor_pago, na.rm=TRUE),
+    p_valor_pago = valor_pago/nfamilia
+  ) %>% 
+  ggplot(aes(x=ano, y=valor_pago)) +
+  geom_col()
+```
+
+ 
+```{r}
+im %>% 
+  group_by(ano, nome) %>% filter(ano <= 2019, nome == "Jaboticabal") %>% 
+  summarise(
+    nfamilia = mean(familias_beneficiarias_pbf, na.rm=TRUE),
+    valor_pago = mean(valor_pago_pbf, na.rm=TRUE)
+  ) %>% 
+    group_by(ano) %>% 
+  summarise(
+    nfamilia = sum(nfamilia, na.rm=TRUE),
+    valor_pago = sum(valor_pago, na.rm=TRUE),
+    p_valor_pago = valor_pago/nfamilia
+  ) %>% 
+  ggplot(aes(x=ano, y=nfamilia)) +
+  geom_col()
+```
+
+## Agrupar as cidades por modelos de aplicação diferentes
+
+```{r}
+d_aux <- im %>% 
+  group_by(ano, nome) %>% filter(ano <= 2019, nome == "Bauru") %>% 
+  summarise(
+    nfamilia = mean(familias_beneficiarias_pbf, na.rm=TRUE),
+    valor_pago = mean(valor_pago_pbf, na.rm=TRUE)
+  ) %>% 
+    group_by(ano) %>% 
+  summarise(
+    nfamilia = sum(nfamilia, na.rm=TRUE),
+    valor_pago = sum(valor_pago, na.rm=TRUE),
+    p_valor_pago = valor_pago/nfamilia
+  ) 
+#model1 <- nls(valor_pago ~ c*(1-exp(-ano/a)), start=list(a=2013,c=2),
+#              data = d_aux)
+model <- lm(log(valor_pago) ~ log(ano),
+              data = d_aux)              
+summary((model))
+
+```
+ 
+ 
+ 
+### agrupamento das cidades por PCA e Cluster
+
+```{r}
+cidades <- im %>% pull(nome) %>%  unique()
+dw_aux <- im %>% filter(nome != "São Paulo") %>% 
+  group_by(ano, nome) %>% filter(ano <= 2019) %>% 
+  summarise(
+    # nfamilia = mean(familias_beneficiarias_pbf, na.rm=TRUE),
+    valor_pago = mean(valor_pago_pbf, na.rm=TRUE)
+  ) %>% 
+    pivot_wider(id_cols = nome, names_from = ano, values_from = valor_pago) %>% 
+  janitor::clean_names()
+
+da_pad<-vegan::decostand( dw_aux %>% as.data.frame() %>% 
+                            select(x2004:x2019), 
+                          method = "standardize",
+                          na.rm=TRUE)
+da_pad_euc<-vegan::vegdist(da_pad,"euclidean") 
+da_pad_euc_ward<-hclust(da_pad_euc, method="ward.D")
+plot(da_pad_euc_ward, 
+     ylab="Distância Euclidiana",
+     xlab="Acessos", hang=-1,
+     col="blue", las=1,
+     cex=.6,lwd=1.5);box()
+
+```
+
+ 
+ 
+ 
+ 
+```{r}
+pca <-  prcomp(da_pad,scale.=T)
+
+# # Autovalores
+eig<-pca$sdev^2
+print("==== Autovalores ====")
+#> [1] "==== Autovalores ===="
+print(round(eig,3))
+#>  [1] 6.771 2.739 1.422 0.861 0.084 0.060 0.040 0.011 0.007 0.003 0.001 0.000
+print("==== % da variância explicada ====")
+#> [1] "==== % da variância explicada ===="
+ve<-eig/sum(eig)
+print(round(ve,4))
+#>  [1] 0.5643 0.2283 0.1185 0.0718 0.0070 0.0050 0.0034 0.0009 0.0006 0.0002
+#> [11] 0.0001 0.0000
+print("==== % da variância explicada acumulada ====")
+#> [1] "==== % da variância explicada acumulada ===="
+print(round(cumsum(ve),4)*100)
+#>  [1]  56.43  79.26  91.10  98.28  98.99  99.48  99.82  99.91  99.97  99.99
+#> [11] 100.00 100.00
+print("==== Poder Discriminante ====")
+#> [1] "==== Poder Discriminante ===="
+mcor<-cor(da_pad,pca$x)
+corrplot::corrplot(mcor)
+
+print("==== Gráfico Biplot ====")
+#> [1] "==== Gráfico Biplot ===="
+pc1V<-cor(da_pad,pca$x)[,1]/sd(cor(da_pad,pca$x)[,1])
+pc2V<-cor(da_pad,pca$x)[,2]/sd(cor(da_pad,pca$x)[,2])
+pc3V<-cor(da_pad,pca$x)[,3]/sd(cor(da_pad,pca$x)[,3])
+pc1c<-pca$x[,1]/sd(pca$x[,1])
+pc2c<-pca$x[,2]/sd(pca$x[,2])
+pc3c<-pca$x[,3]/sd(pca$x[,3])
+nv<-ncol(da_pad)
+```
+ 
+ 
+```{r}
+bip<-data.frame(pc1c,pc2c,pc3c)
+texto <- data.frame(
+  x = pc1V,
+  y = pc2V,
+  z = pc3V,
+  label = names(da_pad)
+)
+
+graf<-bip %>%
+  ggplot(aes(x=pc1c,y=pc2c))+
+  geom_point(size = 3)+ 
+  theme_minimal() # +
+#   #scale_shape_manual(values=16:17) +
+#   #scale_color_manual(values=c("#009E73", "#D55E00"))+
+#   annotate(geom="text", x=pc1V, y=pc2V,
+#               color="black",font=3)+
+#   annotate(geom="text", x=pc1c, y=pc2c, 
+#               color="gray",font=3)+
+#   geom_vline(aes(xintercept=0),
+#              color="black", size=1)+
+#   geom_hline(aes(yintercept=0),
+#              color="black", size=1)+
+#   annotate(geom="segment",
+#            x=rep(0,length(da_pad)),
+#            xend=texto$x,
+#            y=rep(0,length(da_pad)),
+#            yend=texto$y,color="black",lwd=.5)+
+#   geom_label(data=texto,aes(x=x,y=y,label=label),
+#              color="black",angle=0,fontface="bold",size=4,fill="white")+
+#   labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
+#        y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
+#        color="",shape="")+
+#   theme(legend.position = "top")
+# print(graf)
+```
+ 
+ 
+ ### Vulnerabilidade
+ 
+```{r}
+vul %>% pull(ano) %>% unique()
+vul %>% filter(nome == "Bauru", ano == 2010) %>% 
+  ggplot(aes(x=ano, y=proporcao_vulneravel)) + 
+  geom_point()
+```
+ 
+
+
+### Saude estado nutricional
+
+
+```{r}
+df_final <- read_rds("../data/df_final.rds") %>% 
+  select(-indice_cri,-indice_ado)
+glimpse(df_final)
+saude_en <- df_final %>% 
+  group_by(ano,municipio,fase_da_vida,idade,indice) %>% 
+  mutate(perc = valor / sum(valor) * 100, 
+         total = sum(valor)) 
+```
+
+```{r}
+saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    ) %>% 
+  ggplot(aes(x=ano, y=perc_g)) +
+  
+```

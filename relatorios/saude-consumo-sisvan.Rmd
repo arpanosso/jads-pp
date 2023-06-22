@@ -1,0 +1,93 @@
+---
+title: "Modelagem Saude-Sisvan"
+author: "Panosso AR & Oliveira JA"
+date: "2023-05-03"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      error = FALSE,
+                      warning = FALSE)
+```
+
+ 
+### Carregando pacotes
+```{r}
+library(tidyverse)
+```
+
+
+
+### Saude estado nutricional
+
+
+```{r}
+df_final <- read_rds("../data/df_final.rds") %>% 
+  select(-indice_cri,-indice_ado)
+
+saude_consumo <- read_rds("../data/consumo/consumo.rds") %>% 
+  rename(id_municipio = codigo_ibge) %>% 
+  mutate(id_municipio = as.character(id_municipio))
+glimpse(saude_consumo)
+
+df_nome <- read_rds("../data/df_nome.rds") %>% 
+  mutate(id_municipio = id_municipio_6) %>% select(nome, id_municipio)
+
+saude_consumo <- left_join(saude_consumo, df_nome, "id_municipio") %>% 
+  mutate(municipio = nome) %>% 
+  select(-nome)
+```
+
+## Três Refeições
+
+
+```{r}
+saude_consumo %>% pull(var = tipo_relatorio) %>% unique()
+
+saude_consumo %>% filter(tipo_relatorio == "CONS_3REFEICOES")  %>% 
+  group_by(ano, fase_da_vida) %>% 
+  summarise(
+    valor = sum(total),
+    total = sum(monitorados),
+    perc = valor/total *100
+  ) %>% 
+  ggplot(aes(x=ano, y=perc, fill= fase_da_vida)) +
+  geom_col(position = "dodge", color="black") +
+  theme_bw()
+```
+
+## grando todos
+
+```{r}
+relatorio <- saude_consumo %>% pull(var = tipo_relatorio) %>% unique()
+
+for( i in seq_along(relatorio)){
+  rl <- relatorio[i]
+  
+  plt_i <- saude_consumo %>% filter(tipo_relatorio == rl)  %>% 
+  group_by(ano, fase_da_vida) %>% 
+  summarise(
+    valor = sum(total),
+    total = sum(monitorados),
+    perc = valor/total *100
+  ) %>% 
+  ggplot(aes(x=ano, y=perc, fill= fase_da_vida)) +
+  geom_col(position = "dodge", color="black") +
+  labs(title = rl) +
+  theme_bw()
+  print(plt_i)
+}
+  
+  
+```
+
+## gerar com linhas 
+## tendecias das categorais
+## fazer as regressões (inclusive gerar as tendencias não correlacionadas dos resíduos)
+## algumas correlações entre os relatórios, para ver tendendicas conjuntas.
+## Isso é série temporal vouprecisar ver como se faz as analises
+

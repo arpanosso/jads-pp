@@ -1,0 +1,123 @@
+---
+title: "Modelagem 04"
+author: "Panosso AR & Oliveira JA"
+date: "2023-06-12"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	error = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+library(lubridate)
+library(bit64)
+library(ggpubr)
+library(stringr)
+library(sf)
+source("../R/my-functions.R")
+```
+
+### Análise de modelagem 01
+
+```{r}
+sim_municipio <- read_rds("../data/sim_municipio.rds") %>% 
+  mutate(across(c(ano, idade, numero_obitos),as.numeric))
+glimpse(sim_municipio)
+```
+
+
+```{r}
+sim_municipio %>%  
+  group_by(ano, id_municipio) %>% 
+  summarise( count= sum(numero_obitos)) %>% 
+  filter(id_municipio == "3500105")
+```
+
+
+```{r}
+sim_municipio %>% 
+  group_by(ano, sexo, raca_cor) %>% 
+  summarise( n_obitos = sum(numero_obitos)) %>% 
+  ggplot(aes(x=ano, y=n_obitos, color=sexo)) +
+  # geom_col(color="black",
+  #          position = "dodge") +
+  facet_wrap(~raca_cor) +
+  geom_point() +
+  geom_line() +
+  theme_bw()
+```
+
+
+
+### Mapeando
+
+```{r}
+soma <- sim_municipio  %>% 
+    group_by(ano, nome, id_municipio) %>%
+    summarise(
+      n_obitos = sum(numero_obitos, na.rm=TRUE)
+) %>% 
+  arrange(desc(n_obitos)) %>% 
+  filter(!is.na(nome)) %>% 
+             mutate(categoria = as.factor(case_when(
+               n_obitos <= 50 ~ "[0-50]",
+               n_obitos <= 100 ~ "[50-100]",
+               n_obitos <= 300 ~ "[100-300]",
+               n_obitos <= 500 ~ "[300-500]",
+               n_obitos <= 700 ~ "[500-700]",
+               n_obitos > 700 ~ "[>500]",
+             )))
+soma <- soma %>% mutate(categoria = as.factor(categoria),
+                        categoria = fct_relevel(categoria,
+                                                "[0-50]","[50-100]",
+                                                "[100-300]","[300-500]",
+                                                "[500-700]","[>700]"))
+
+glimpse(soma)
+```
+
+## Mapeando
+
+```{r}
+soma %>%
+  ggplot(aes(x=n_obitos)) +
+  geom_histogram(color="black",
+                 fill="lightgray") +
+  theme_bw()
+```
+
+
+```{r}
+soma %>% pull(n_obitos) %>% summary()
+```
+
+### Juntando as bases de dados
+
+```{r}
+d_sf_municipio <- st_read("../shp/35MUE250GC_SIR.shp", quiet = TRUE)
+d_sf_municipio <- d_sf_municipio %>%
+  rename(id_municipio = CD_GEOCMU) %>%
+  inner_join(soma %>%
+             relocate(id_municipio), 
+             "id_municipio")
+```
+
+
+
+```{r}
+anos <- soma$ano %>% unique() %>% sort()
+map(anos, ~{
+  ggplot(d_sf_municipio %>% filter(ano == .x)) +
+  geom_sf(aes(fill = as.factor(categoria)))+
+  theme_minimal() +
+  scale_fill_viridis_d()+
+  labs(title = .x, fill="# obitos")
+})
+```
+

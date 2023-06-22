@@ -1,0 +1,303 @@
+---
+title: "Modelagem 03"
+author: "Panosso AR & Oliveira JA"
+date: "2023-05-18"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	error = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+library(lubridate)
+library(bit64)
+library(ggpubr)
+library(stringr)
+library(sf)
+source("../R/my-functions.R")
+```
+
+### Análise de modelagem 01
+
+```{r}
+#sisvan_estab <- read_rds("../data/sisvan_estab.rds")
+#sisvan_estab$files_way %>% unique()
+#sisvan_estab$ano %>% unique()
+
+read_rds("../data/vulnerabilidade.rds") %>%  filter(id_municipio == "3500105")
+
+vulnerabilidade <- read_rds("../data/vulnerabilidade.rds") %>% 
+  select(ano, id_municipio,
+         proporcao_vulnerabilidade_socioeconomica,
+         renda_per_capita,
+         renda_per_capita_vulneravel,
+         proporcao_vulneravel_dependente_idoso,
+         populacao_vulneravel_15_24,
+         indice_gini)
+
+glimpse(vulnerabilidade)
+vulnerabilidade %>%  filter(id_municipio == "3500105")
+```
+
+```{r}
+df_nome <- read_rds("../data/df_nome.rds")
+
+vulne <- left_join(vulnerabilidade,df_nome %>% 
+            select(id_municipio, nome) ,"id_municipio") %>% 
+  mutate(municipio = nome) %>% 
+  select(-nome)
+```
+
+
+```{r}
+vulne_est <- vulne  %>% 
+    group_by(ano, municipio) %>%
+    summarise(
+      proporcao_vulnerabilidade_socioeconomica = median(proporcao_vulnerabilidade_socioeconomica, na.rm=TRUE),
+      renda_per_capita  = median(renda_per_capita, na.rm=TRUE),
+      renda_per_capita_vulneravel = median(renda_per_capita_vulneravel, na.rm=TRUE),
+      proporcao_vulneravel_dependente_idoso = median(proporcao_vulneravel_dependente_idoso, na.rm=TRUE),
+      populacao_vulneravel_15_24 = sum(populacao_vulneravel_15_24, na.rm=TRUE),
+      indice_gini = median(indice_gini, na.rm=TRUE)
+    ) %>% 
+  pivot_wider(names_from = ano, values_from = c(
+    proporcao_vulnerabilidade_socioeconomica,
+    renda_per_capita,
+    renda_per_capita_vulneravel,
+    proporcao_vulneravel_dependente_idoso,
+    populacao_vulneravel_15_24,
+    indice_gini)
+  ) %>% 
+  mutate(
+    proporcao_vulnerabilidade_socioeconomica_2020= my_mean(proporcao_vulnerabilidade_socioeconomica_2000,proporcao_vulnerabilidade_socioeconomica_2010,2020,"est"),
+    renda_per_capita_2020= my_mean(renda_per_capita_2000,renda_per_capita_2010,2020,"est"),
+    renda_per_capita_vulneravel_2020= my_mean(renda_per_capita_vulneravel_2000,renda_per_capita_vulneravel_2010,2020,"est"),
+    proporcao_vulneravel_dependente_idoso_2020= my_mean(proporcao_vulneravel_dependente_idoso_2000,proporcao_vulneravel_dependente_idoso_2010,2020,"est"),
+    populacao_vulneravel_15_24_2020= my_mean(populacao_vulneravel_15_24_2000,populacao_vulneravel_15_24_2010,2020,"est"),
+    indice_gini_2020 = my_mean(indice_gini_2000,indice_gini_2010,2020,"est"),
+    
+        proporcao_vulnerabilidade_socioeconomica_2030= my_mean(proporcao_vulnerabilidade_socioeconomica_2000,proporcao_vulnerabilidade_socioeconomica_2010,2030,"est"),
+    renda_per_capita_2030= my_mean(renda_per_capita_2000,renda_per_capita_2010,2030,"est"),
+    renda_per_capita_vulneravel_2030= my_mean(renda_per_capita_vulneravel_2000,renda_per_capita_vulneravel_2010,2030,"est"),
+    proporcao_vulneravel_dependente_idoso_2030= my_mean(proporcao_vulneravel_dependente_idoso_2000,proporcao_vulneravel_dependente_idoso_2010,2030,"est"),
+    populacao_vulneravel_15_24_2030= my_mean(populacao_vulneravel_15_24_2000,populacao_vulneravel_15_24_2010,2030,"est"),
+    indice_gini_2030 = my_mean(indice_gini_2000,indice_gini_2010,2030,"est")
+  ) %>% 
+  pivot_longer(cols = proporcao_vulnerabilidade_socioeconomica_2000:indice_gini_2030,names_to = "variavel",values_to = "valor") %>% 
+  mutate(ano = str_remove_all(variavel,"[A-z]|15|24"),
+         variavel = str_remove_all(variavel,"_2000|_2010|_2020|_2030")) %>% 
+  pivot_wider(names_from = variavel, values_from = valor) %>% 
+  mutate(ano = as.numeric(ano))
+```
+
+```{r}
+vulne_est %>% 
+    group_by(ano) %>% 
+    summarise(
+      proporcao_vulnerabilidade_socioeconomica = median(proporcao_vulnerabilidade_socioeconomica, na.rm=TRUE),
+      renda_per_capita  = median(renda_per_capita, na.rm=TRUE),
+      renda_per_capita_vulneravel = median(renda_per_capita_vulneravel, na.rm=TRUE),
+      proporcao_vulneravel_dependente_idoso = median(proporcao_vulneravel_dependente_idoso, na.rm=TRUE),
+      populacao_vulneravel_15_24 = sum(populacao_vulneravel_15_24, na.rm=TRUE),
+      indice_gini = median(indice_gini, na.rm=TRUE)
+    ) %>%
+  mutate(tipo = as.factor(ifelse(ano<=2010,"original","estimado"))) %>% 
+  ggplot(aes(x=ano, y=proporcao_vulnerabilidade_socioeconomica,fill=tipo)) +
+  geom_col(color="black") +
+  scale_fill_manual(values=c("lightblue","gray")) +
+  theme_bw()
+  
+```
+
+
+```{r}
+vulne_est %>% 
+    group_by(ano) %>%
+    summarise(
+      proporcao_vulnerabilidade_socioeconomica = median(proporcao_vulnerabilidade_socioeconomica, na.rm=TRUE),
+      renda_per_capita  = median(renda_per_capita, na.rm=TRUE),
+      renda_per_capita_vulneravel = median(renda_per_capita_vulneravel, na.rm=TRUE),
+      proporcao_vulneravel_dependente_idoso = median(proporcao_vulneravel_dependente_idoso, na.rm=TRUE),
+      populacao_vulneravel_15_24 = sum(populacao_vulneravel_15_24, na.rm=TRUE),
+      indice_gini = median(indice_gini, na.rm=TRUE)
+    ) %>%
+  mutate(tipo = as.factor(ifelse(ano<=2010,"original","estimado")))   %>%
+  ggplot(aes(x=ano, y=renda_per_capita, fill=tipo)) +
+  geom_col(color="black") +
+  scale_fill_manual(values=c("lightblue","gray")) +
+  theme_bw()
+```
+
+
+```{r}
+vulne_est %>% 
+  group_by(ano) %>%
+  summarise(
+    proporcao_vulnerabilidade_socioeconomica = median(proporcao_vulnerabilidade_socioeconomica, na.rm=TRUE),
+    renda_per_capita  = median(renda_per_capita, na.rm=TRUE),
+    renda_per_capita_vulneravel = median(renda_per_capita_vulneravel, na.rm=TRUE),
+    proporcao_vulneravel_dependente_idoso = median(proporcao_vulneravel_dependente_idoso, na.rm=TRUE),
+    populacao_vulneravel_15_24 = sum(populacao_vulneravel_15_24, na.rm=TRUE),
+    indice_gini = median(indice_gini, na.rm=TRUE)
+  ) %>%
+  mutate(tipo = as.factor(ifelse(ano<=2010,"original","estimado"))) %>% 
+  ggplot(aes(x=ano, y=renda_per_capita_vulneravel, fill=tipo)) +
+  geom_col(color="black") +
+  scale_fill_manual(values=c("lightblue","gray")) +
+  theme_bw()
+```
+
+```{r}
+vulne_est %>% 
+    group_by(ano) %>%
+    summarise(
+      proporcao_vulnerabilidade_socioeconomica = median(proporcao_vulnerabilidade_socioeconomica, na.rm=TRUE),
+      renda_per_capita  = median(renda_per_capita, na.rm=TRUE),
+      renda_per_capita_vulneravel = median(renda_per_capita_vulneravel, na.rm=TRUE),
+      proporcao_vulneravel_dependente_idoso = median(proporcao_vulneravel_dependente_idoso, na.rm=TRUE),
+      populacao_vulneravel_15_24 = sum(populacao_vulneravel_15_24, na.rm=TRUE),
+      indice_gini = median(indice_gini, na.rm=TRUE)
+    ) %>%
+  mutate(tipo = as.factor(ifelse(ano<=2010,"original","estimado"))) %>%
+  ggplot(aes(x=ano, y=proporcao_vulneravel_dependente_idoso, fill=tipo)) +
+  geom_col(color="black") +
+  scale_fill_manual(values=c("lightblue","gray")) +
+  theme_bw()
+```
+
+
+```{r}
+vulne_est %>% 
+    group_by(ano) %>%
+    summarise(
+      proporcao_vulnerabilidade_socioeconomica = median(proporcao_vulnerabilidade_socioeconomica, na.rm=TRUE),
+      renda_per_capita  = median(renda_per_capita, na.rm=TRUE),
+      renda_per_capita_vulneravel = median(renda_per_capita_vulneravel, na.rm=TRUE),
+      proporcao_vulneravel_dependente_idoso = median(proporcao_vulneravel_dependente_idoso, na.rm=TRUE),
+      populacao_vulneravel_15_24 = sum(populacao_vulneravel_15_24, na.rm=TRUE),
+      indice_gini = median(indice_gini, na.rm=TRUE)
+    ) %>%
+  mutate(tipo = as.factor(ifelse(ano<=2010,"original","estimado"))) %>%
+  ggplot(aes(x=ano, y=populacao_vulneravel_15_24, fill=tipo)) +
+  geom_col(color="black") +
+  scale_fill_manual(values=c("lightblue","gray")) +
+  theme_bw()
+```
+
+
+```{r}
+vulne_est %>% 
+    group_by(ano) %>%
+    summarise(
+      proporcao_vulnerabilidade_socioeconomica = median(proporcao_vulnerabilidade_socioeconomica, na.rm=TRUE),
+      renda_per_capita  = median(renda_per_capita, na.rm=TRUE),
+      renda_per_capita_vulneravel = median(renda_per_capita_vulneravel, na.rm=TRUE),
+      proporcao_vulneravel_dependente_idoso = median(proporcao_vulneravel_dependente_idoso, na.rm=TRUE),
+      populacao_vulneravel_15_24 = sum(populacao_vulneravel_15_24, na.rm=TRUE),
+      indice_gini = median(indice_gini, na.rm=TRUE)
+    ) %>%
+  mutate(tipo = as.factor(ifelse(ano<=2010,"original","estimado"))) %>%
+  ggplot(aes(x=ano, y=indice_gini, fill=tipo)) +
+  geom_col(color="black") +
+  scale_fill_manual(values=c("lightblue","gray")) +
+  theme_bw()
+```
+### Mapeando
+
+```{r}
+vulne_beta <- vulne  %>% 
+    group_by(ano, municipio, id_municipio) %>%
+    summarise(
+      proporcao_vulnerabilidade_socioeconomica = median(proporcao_vulnerabilidade_socioeconomica, na.rm=TRUE),
+      renda_per_capita  = median(renda_per_capita, na.rm=TRUE),
+      renda_per_capita_vulneravel = median(renda_per_capita_vulneravel, na.rm=TRUE),
+      proporcao_vulneravel_dependente_idoso = median(proporcao_vulneravel_dependente_idoso, na.rm=TRUE),
+      populacao_vulneravel_15_24 = sum(populacao_vulneravel_15_24, na.rm=TRUE),
+      indice_gini = median(indice_gini, na.rm=TRUE)
+    ) %>% group_by(municipio) %>% filter(ano <= 2010) %>% 
+  mutate(proporcao_vulnerabilidade_socioeconomica_beta = my_regs(ano,proporcao_vulnerabilidade_socioeconomica),
+         renda_per_capita_beta = my_regs(ano,renda_per_capita),
+         renda_per_capita_vulneravel_beta = my_regs(ano,renda_per_capita_vulneravel),
+         proporcao_vulneravel_dependente_idoso_beta = my_regs(ano,proporcao_vulneravel_dependente_idoso),
+         populacao_vulneravel_15_24_beta = my_regs(ano,populacao_vulneravel_15_24),
+         indice_gini_beta = my_regs(ano,indice_gini)) %>% 
+  filter(ano == 2010) %>% select(-ano)
+
+glimpse(vulne_beta)
+```
+
+## Mapeando
+
+```{r}
+vulne_beta %>%
+  ggplot(aes(x=indice_gini_beta)) +
+  geom_histogram(color="black",
+                 fill="lightgray") +
+  theme_bw()
+```
+
+
+```{r}
+vulne_beta %>% pull(indice_gini_beta) %>% summary()
+```
+
+### Juntando as bases de dados
+
+```{r}
+d_sf_municipio <- st_read("../shp/35MUE250GC_SIR.shp", quiet = TRUE)
+d_sf_municipio <- d_sf_municipio %>%
+  rename(id_municipio = CD_GEOCMU) %>%
+  inner_join(vulne_beta %>%
+               relocate(id_municipio), "id_municipio") %>%
+  mutate(
+    # classe_gini = cut(indice_gini_beta,7),
+    classe_gini = ifelse(indice_gini_beta > 0.005,
+                         "Aumento",ifelse(indice_gini_beta > -0.01,
+                                        "Constante","Queda"))
+         )
+```
+
+
+```{r}
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = indice_gini))+
+  theme_minimal() +
+  scale_fill_viridis_c()
+```
+
+```{r}
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = classe_gini))+
+  theme_minimal() +
+  scale_fill_manual(values = c("blue2","chartreuse4","coral2"))
+```
+
+
+```{r}
+mapas <- list(
+  d_sf_municipio,d_sf_municipio,d_sf_municipio,
+  d_sf_municipio,d_sf_municipio,d_sf_municipio)
+
+titulos <- list(
+  "proporcao_vulnerabilidade_socioeconomica_beta",
+  "renda_per_capita_beta",
+  "renda_per_capita_vulneravel_beta",
+  "proporcao_vulneravel_dependente_idoso_beta",
+  "populacao_vulneravel_15_24_beta",
+  "indice_gini_beta")
+
+purrr::map2(mapas, titulos, ~ {
+  ggplot(.x) +
+    geom_sf(aes_string(fill = .y)) +
+    theme_minimal() +
+    ggtitle(.y) + labs(fill="")+
+    scale_fill_viridis_c()
+})
+# gridExtra::grid.arrange(grobs = graficos)
+```

@@ -1,0 +1,317 @@
+---
+title: "Modelagem-01"
+author: "Panosso AR & Oliveira JA"
+date: "2023-05-16"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      error = FALSE,
+                      warning = FALSE)
+library(tidyverse)
+library(lubridate)
+library(bit64)
+library(ggpubr)
+source("../R/my-functions.R")
+```
+
+### Análise de modelagem 01
+
+#### Carregando a base de dados
+
+```{r}
+#sisvan_estab <- read_rds("../data/sisvan_estab.rds")
+#sisvan_estab$files_way %>% unique()
+#sisvan_estab$ano %>% unique()
+sisvan_estab <- read_rds("../data/sisvan_estab.rds")
+glimpse(sisvan_estab)
+```
+
+#### Resumo estatístico da base
+
+```{r}
+sisvan_estab %>% 
+  group_by(ano, municipio) %>% 
+  summarise(
+    servico_nutricao_proprio= sum(indicador_servico_nutricao_proprio),
+    servico_nutricao_terceirizado = sum(indicador_servico_nutricao_terceirizado),
+    servico_lactario_proprio= sum(indicador_servico_lactario_proprio),                         
+    servico_lactario_terceirizado= sum(indicador_servico_lactario_terceirizado),                    servico_banco_leite_proprio= sum(indicador_servico_banco_leite_proprio),                        servico_banco_leite_terceirizado= sum(indicador_servico_banco_leite_terceirizado)
+  )
+```
+
+
+
+
+## Nutrição
+
+```{r}
+df_aux <- sisvan_estab %>% 
+  mutate(
+    ano_mes = make_date(year=ano,month=mes,day=1)) %>% 
+  group_by(ano, mes, ano_mes) %>% 
+  summarise(
+    servico_nutricao_proprio= sum(indicador_servico_nutricao_proprio),
+    servico_nutricao_terceirizado = sum(indicador_servico_nutricao_terceirizado),
+    servico_lactario_proprio= sum(indicador_servico_lactario_proprio),                         
+    servico_lactario_terceirizado= sum(indicador_servico_lactario_terceirizado),                    servico_banco_leite_proprio= sum(indicador_servico_banco_leite_proprio),                        servico_banco_leite_terceirizado= sum(indicador_servico_banco_leite_terceirizado)
+  ) 
+```
+
+### Estatística Descritiva
+
+```{r}
+df_aux  %>% filter(ano >= 2010) %>% 
+  mutate(ano = as.factor(ano)) %>% 
+  ggplot(aes(x = servico_nutricao_proprio, y = ano, fill = ano)) +
+  ggridges::geom_density_ridges(color = 'transparent', alpha = .6) +
+  scale_fill_viridis_d() +
+  labs(
+    x = "servico_nutricao_proprio",
+    y = "Ano"
+  ) +
+  theme(
+    legend.position = 'none',axis.text = element_text(size = 8)
+    ) +
+  geom_vline(xintercept = df_aux %>% ungroup %>% 
+               filter(ano >= 2010) %>% 
+               pull(servico_nutricao_proprio) %>%  mean(),
+               color="lightblue") +
+  #theme_bw() +
+  hrbrthemes::theme_modern_rc()
+
+```
+```{r}
+
+variaveis <- c("servico_nutricao_proprio",
+               "servico_nutricao_terceirizado",
+               "servico_lactario_proprio",
+               "servico_lactario_terceirizado",
+               "servico_banco_leite_proprio",
+               "servico_banco_leite_terceirizado")
+
+map(variaveis, ~{
+  df_aux  %>% filter(ano >= 2010) %>% 
+  mutate(ano = as.factor(ano)) %>% 
+  ggplot(aes_string(x = .x, y = "ano", fill = "ano")) +
+  ggridges::geom_density_ridges(color = 'transparent', alpha = .6) +
+  scale_fill_viridis_d() +
+  labs(
+    x = .x,
+    y = "Ano"
+  ) +
+  theme(
+    legend.position = 'none',axis.text = element_text(size = 8)
+    ) +
+  geom_vline(xintercept = df_aux %>% ungroup %>%
+               filter(ano >= 2010) %>%
+               pull(.x) %>%  mean(),
+               color="lightblue") +
+  #theme_bw() +
+  hrbrthemes::theme_modern_rc()
+})
+
+
+```
+
+
+
+```{r}
+coeff <- 1
+df_aux %>% 
+  ggplot(aes(x = ano_mes)) +
+  geom_line(aes(y = servico_nutricao_proprio), color="red") +
+  geom_line(aes(y = servico_nutricao_terceirizado/coeff)) +
+  scale_y_continuous(
+    name = "servico_nutricao_proprio",
+    sec.axis = sec_axis(~.*coeff, name="servico_nutricao_terceirizado")
+  ) +
+  theme_bw()
+```
+
+```{r}
+df_aux  %>% 
+  select(ano_mes,servico_nutricao_proprio,servico_nutricao_terceirizado) %>% 
+  pivot_longer(cols = c("servico_nutricao_proprio","servico_nutricao_terceirizado"),
+               names_to = "tipo",
+               values_to = "valor") %>% 
+  ggscatter(
+    x = "ano_mes", y = "valor",
+    color = "tipo", palette = "jco",
+    add = "reg.line"
+  ) +
+  facet_wrap(~as.factor(tipo),scales = "free") +
+  #stat_cor() + 
+  stat_regline_equation()+
+  theme( legend.position = "none")
+```
+
+### Projeção 
+
+```{r}
+previsao_sisvan_estab(servico_nutricao_proprio,ano_corte=2007,ano_final=2030,  janela = 3)
+```
+
+```{r}
+previsao_sisvan_estab(servico_nutricao_terceirizado,ano_corte=2007,ano_final=2030,  janela = 5)
+```
+
+
+
+```{r}
+sisvan_estab %>% mutate_if(is.integer64, as.integer) %>% 
+  mutate(
+    ano_mes = make_date(year=ano,month=mes,day=1)) %>% 
+  group_by(ano, mes) %>% 
+  summarise(
+    servico_nutricao_proprio= sum(indicador_servico_nutricao_proprio),
+    servico_nutricao_terceirizado = sum(indicador_servico_nutricao_terceirizado),
+    servico_lactario_proprio= sum(indicador_servico_lactario_proprio),                         
+    servico_lactario_terceirizado= sum(indicador_servico_lactario_terceirizado),                   
+    servico_banco_leite_proprio= sum(indicador_servico_banco_leite_proprio),                      
+    servico_banco_leite_terceirizado= sum(indicador_servico_banco_leite_terceirizado)
+  ) %>% 
+  group_by(ano) %>% 
+    summarise(
+    servico_nutricao_proprio = mean(servico_nutricao_proprio),
+    servico_nutricao_terceirizado = mean(servico_nutricao_terceirizado),
+    # servico_lactario_proprio= mean(servico_lactario_proprio),
+    # servico_lactario_terceirizado= mean(servico_lactario_terceirizado),
+    # servico_banco_leite_proprio= mean(servico_banco_leite_proprio),                      
+    # servico_banco_leite_terceirizado= mean(servico_banco_leite_terceirizado)
+  ) 
+```
+
+### Lactário
+
+```{r}
+coeff <- 1/4
+df_aux %>% 
+  ggplot(aes(x = ano_mes)) +
+  geom_line(aes(y = servico_lactario_proprio), color="red") +
+  geom_line(aes(y = servico_lactario_terceirizado/coeff)) +
+  scale_y_continuous(
+    name = "servico_lactario_proprio",
+    sec.axis = sec_axis(~.*coeff, name="servico_lactario_terceirizado")
+  ) +
+  theme_bw()
+```
+
+```{r}
+df_aux  %>% 
+  select(ano_mes,servico_lactario_proprio,servico_lactario_terceirizado) %>% 
+  pivot_longer(cols = c("servico_lactario_proprio","servico_lactario_terceirizado"),
+               names_to = "tipo",
+               values_to = "valor") %>% 
+  ggscatter(
+    x = "ano_mes", y = "valor",
+    color = "tipo", palette = "jco",
+    add = "reg.line"
+  ) +
+  facet_wrap(~as.factor(tipo),scales = "free") +
+  #stat_cor() + 
+  stat_regline_equation()+
+  theme( legend.position = "none")
+```
+
+```{r}
+previsao_sisvan_estab(servico_lactario_proprio,ano_corte=2007,ano_final=2030,  janela = 6)
+```
+```{r}
+previsao_sisvan_estab(servico_lactario_terceirizado,ano_corte=2007,ano_final=2030,  janela = 3)
+```
+
+
+
+```{r}
+sisvan_estab %>% mutate_if(is.integer64, as.integer) %>% 
+  mutate(
+    ano_mes = make_date(year=ano,month=mes,day=1)) %>% 
+  group_by(ano, mes) %>% 
+  summarise(
+    servico_nutricao_terceirizado = sum(indicador_servico_nutricao_terceirizado),
+    servico_lactario_proprio= sum(indicador_servico_lactario_proprio),                         
+    servico_lactario_terceirizado= sum(indicador_servico_lactario_terceirizado),                   
+    servico_banco_leite_proprio= sum(indicador_servico_banco_leite_proprio),                      
+    servico_banco_leite_terceirizado= sum(indicador_servico_banco_leite_terceirizado)
+  ) %>% 
+  group_by(ano) %>% 
+    summarise(
+    # servico_nutricao_terceirizado = mean(servico_nutricao_terceirizado),
+    servico_lactario_proprio= mean(servico_lactario_proprio),
+    servico_lactario_terceirizado= mean(servico_lactario_terceirizado),
+    # servico_banco_leite_proprio= mean(servico_banco_leite_proprio),                      
+    # servico_banco_leite_terceirizado= mean(servico_banco_leite_terceirizado)
+  ) 
+```
+
+
+#### Banco de leite
+
+```{r}
+coeff <- 1
+df_aux %>% 
+  ggplot(aes(x = ano_mes)) +
+  geom_line(aes(y = servico_banco_leite_proprio), color="red") +
+  geom_line(aes(y = servico_banco_leite_terceirizado/coeff)) +
+  scale_y_continuous(
+    name = "servico_banco_leite_proprio",
+    sec.axis = sec_axis(~.*coeff, name="servico_banco_leite_terceirizado")
+  ) +
+  theme_bw()
+```
+
+```{r}
+df_aux  %>% 
+  select(ano_mes,servico_banco_leite_proprio,servico_banco_leite_terceirizado) %>% 
+  pivot_longer(cols = c("servico_banco_leite_proprio","servico_banco_leite_terceirizado"),
+               names_to = "tipo",
+               values_to = "valor") %>% 
+  ggscatter(
+    x = "ano_mes", y = "valor",
+    color = "tipo", palette = "jco",
+    add = "reg.line"
+  ) +
+  facet_wrap(~as.factor(tipo), scale="free") +
+  # stat_cor(label.y = 70) + 
+  stat_regline_equation()+
+  theme( legend.position = "none")
+```
+```{r}
+previsao_sisvan_estab(servico_banco_leite_proprio,ano_corte=2007,ano_final=2030,  janela = 3)
+```
+
+
+```{r}
+previsao_sisvan_estab(servico_banco_leite_terceirizado,ano_corte=2015,ano_final=2030,  janela = 8)
+```
+
+
+
+```{r}
+sisvan_estab %>% mutate_if(is.integer64, as.integer) %>% 
+  mutate(
+    ano_mes = make_date(year=ano,month=mes,day=1)) %>% 
+  group_by(ano, mes) %>% 
+  summarise(
+    servico_nutricao_terceirizado = sum(indicador_servico_nutricao_terceirizado),
+    servico_lactario_proprio= sum(indicador_servico_lactario_proprio),                         
+    servico_lactario_terceirizado= sum(indicador_servico_lactario_terceirizado),                   
+    servico_banco_leite_proprio= sum(indicador_servico_banco_leite_proprio),                      
+    servico_banco_leite_terceirizado= sum(indicador_servico_banco_leite_terceirizado)
+  ) %>% 
+  group_by(ano) %>% 
+    summarise(
+    # servico_nutricao_terceirizado = mean(servico_nutricao_terceirizado),
+    # servico_lactario_proprio= mean(servico_lactario_proprio),                         
+    # servico_lactario_terceirizado= mean(servico_lactario_terceirizado),                   
+    servico_banco_leite_proprio= mean(servico_banco_leite_proprio),                      
+    servico_banco_leite_terceirizado= mean(servico_banco_leite_terceirizado)
+  ) 
+```
+
+

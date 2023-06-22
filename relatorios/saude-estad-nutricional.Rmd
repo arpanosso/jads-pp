@@ -1,0 +1,443 @@
+---
+title: "Modelagem Saude-Sisvan"
+author: "Panosso AR & Oliveira JA"
+date: "2023-05-03"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      error = FALSE,
+                      warning = FALSE)
+```
+
+ 
+### Carregando pacotes
+```{r}
+library(tidyverse)
+```
+
+
+
+### Saude estado nutricional
+
+
+```{r}
+df_final <- read_rds("../data/df_final.rds") %>% 
+  select(-indice_cri,-indice_ado)
+
+saude_en <- df_final %>% 
+  group_by(ano,municipio,fase_da_vida,idade,indice) %>% 
+  mutate(perc = valor / sum(valor) * 100, 
+         total = sum(valor)) 
+```
+
+## Resumo para o Estado
+
+```{r}
+saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    ) %>% 
+  ggplot(aes(x=ano, y=perc_g,fill=classe)) +
+  geom_col(color="black",position = "dodge") +
+  facet_wrap(~fase_da_vida + idade + indice)
+```
+
+
+## Criança Peso X Idade
+
+```{r}
+saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Criança",
+                 indice == "Peso X Idade") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    ) %>% 
+  ggplot(aes(x=ano, y=perc_g,color=classe)) +
+  #geom_col(color="black",position = "dodge") +
+  geom_line()+
+  geom_point()+
+  facet_wrap(~idade)+
+  theme_bw() +
+  theme(legend.position = "top")
+```
+
+```{r}
+da_aux <- saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Criança",
+                 indice == "Peso X Idade") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    )
+
+classe <- da_aux %>% pull(classe) %>% unique()
+
+
+my_kendall <- function(clas, df, id){
+  dfa <- df %>% filter(idade == id, classe == clas)
+  saida <- Kendall::Kendall(1:length(dfa %>% pull(perc_g)), 
+                   dfa %>% pull(perc_g))
+  print(clas)
+  print(saida)
+  
+}
+my_kendall(classe[1],da_aux,id="0-4")
+
+map_df(classe, .f = my_kendall, df=da_aux, id="0-4")
+map_df(classe, .f = my_kendall, df=da_aux, id="5-10")
+```
+
+
+
+## Criança Peso X Altura
+
+```{r}
+saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Criança",
+                 indice == "Peso X Altura") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    ) %>% 
+  ggplot(aes(x=ano, y=perc_g,fill=classe)) +
+  geom_col(color="black",position = "dodge") +
+  facet_wrap(~idade)+
+  theme_bw() +
+  theme(legend.position = "top")
+```
+```{r}
+
+da_aux <- saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Criança",
+                 indice == "Peso X Altura") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    )
+
+classe <- da_aux %>% pull(classe) %>% unique()
+
+
+my_kendall <- function(clas, df, id){
+  dfa <- df %>% filter(idade == id, classe == clas)
+  saida <- Kendall::Kendall(1:length(dfa %>% pull(perc_g)), 
+                   dfa %>% pull(perc_g))
+  print(clas)
+  print(saida)
+  
+}
+my_kendall(classe[1],da_aux,id="0-4")
+
+map_df(classe, .f = my_kendall, df=da_aux, id="0-4")
+map_df(classe, .f = my_kendall, df=da_aux, id="5-10")
+```
+
+
+
+## Criança Altura X Idade
+
+```{r}
+saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Criança",
+                 indice == "Altura X Idade") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    ) %>% 
+  ggplot(aes(x=ano, y=perc_g,fill=classe)) +
+  geom_col(color="black",position = "dodge") +
+  facet_wrap(~idade)+
+  theme_bw() +
+  theme(legend.position = "top")
+```
+
+
+```{r}
+da_aux <- saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Criança",
+                 indice == "Altura X Idade") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    )
+
+classe <- da_aux %>% pull(classe) %>% unique()
+
+
+my_kendall <- function(clas, df, id){
+  dfa <- df %>% filter(idade == id, classe == clas)
+  saida <- Kendall::Kendall(1:length(dfa %>% pull(perc_g)), 
+                   dfa %>% pull(perc_g))
+  print(clas)
+  print(saida)
+  
+}
+my_kendall(classe[1],da_aux,id="0-4")
+
+map_df(classe, .f = my_kendall, df=da_aux, id="0-4")
+map_df(classe, .f = my_kendall, df=da_aux, id="5-10")
+```
+
+## Criança IMC X Idade
+
+```{r}
+saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Criança",
+                 indice == "IMC X Idade") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    ) %>% 
+  ggplot(aes(x=ano, y=perc_g,fill=classe)) +
+  geom_col(color="black",position = "dodge") +
+  facet_wrap(~idade)+
+  theme_bw() +
+  theme(legend.position = "top")
+```
+
+
+```{r}
+da_aux <- saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Criança",
+                 indice == "IMC X Idade") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    )
+
+classe <- da_aux %>% pull(classe) %>% unique()
+
+
+my_kendall <- function(clas, df, id){
+  dfa <- df %>% filter(idade == id, classe == clas)
+  saida <- Kendall::Kendall(1:length(dfa %>% pull(perc_g)), 
+                   dfa %>% pull(perc_g))
+  print(clas)
+  print(saida)
+  
+}
+my_kendall(classe[1],da_aux,id="0-4")
+
+map_df(classe, .f = my_kendall, df=da_aux, id="0-4")
+map_df(classe, .f = my_kendall, df=da_aux, id="5-10")
+```
+
+## Adolescente Altura X Idade
+
+```{r}
+saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Adolescente",
+                 indice == "Altura X Idade") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    ) %>% 
+  ggplot(aes(x=ano, y=perc_g,fill=classe)) +
+  geom_col(color="black",position = "dodge") +
+  # facet_wrap(~idade)+
+  theme_bw() +
+  theme(legend.position = "top")
+```
+
+
+```{r}
+da_aux <- saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Adolescente",
+                 indice == "Altura X Idade") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    )
+
+classe <- da_aux %>% pull(classe) %>% unique()
+map_df(classe, .f = my_kendall, df=da_aux, id="")
+
+```
+
+
+## Adolescente IMC X Idade
+
+```{r}
+saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Adolescente",
+                 indice == "IMC X Idade") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    ) %>% 
+  ggplot(aes(x=ano, y=perc_g,fill=classe)) +
+  geom_col(color="black",position = "dodge") +
+  # facet_wrap(~idade)+
+  theme_bw() +
+  theme(legend.position = "top")
+```
+
+
+```{r}
+da_aux <- saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Adolescente",
+                 indice == "IMC X Idade") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    )
+
+classe <- da_aux %>% pull(classe) %>% unique()
+map_df(classe, .f = my_kendall, df=da_aux, id="")
+
+```
+
+## Adulto IMC
+
+```{r}
+saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Adulto",
+                 indice == "IMC") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    ) %>% 
+  ggplot(aes(x=ano, y=perc_g,fill=classe)) +
+  geom_col(color="black",position = "dodge") +
+  # facet_wrap(~idade)+
+  theme_bw() +
+  theme(legend.position = "top")
+```
+
+
+```{r}
+da_aux <- saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Adulto",
+                 indice == "IMC") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    )
+
+classe <- da_aux %>% pull(classe) %>% unique()
+map_df(classe, .f = my_kendall, df=da_aux, id="")
+
+```
+
+
+
+
+## Idoso IMC
+
+```{r}
+saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Idoso",
+                 indice == "IMC") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    ) %>% 
+  ggplot(aes(x=ano, y=perc_g,fill=classe)) +
+  geom_col(color="black",position = "dodge") +
+  # facet_wrap(~idade)+
+  theme_bw() +
+  theme(legend.position = "top")
+```
+
+
+
+```{r}
+da_aux <- saude_en %>% 
+  group_by(ano,fase_da_vida,idade,indice,classe) %>% 
+  summarise(
+    qnt = sum(valor)
+    ) %>% filter(fase_da_vida == "Idoso",
+                 indice == "IMC") %>% 
+  group_by(ano,fase_da_vida,idade,indice) %>% 
+  mutate(
+    perc_g = qnt/sum(qnt),
+    total_g = sum(qnt)
+    )
+
+classe <- da_aux %>% pull(classe) %>% unique()
+map_df(classe, .f = my_kendall, df=da_aux, id="")
+
+```
+
+## gerar com linhas 
+## tendecias das categorais
+## fazer as regressões (inclusive gerar as tendencias não correlacionadas dos resíduos)
+## algumas correlações entre as categorias. lembrar que é série temporal
+
+
+
+
+
+
