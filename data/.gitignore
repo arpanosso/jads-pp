@@ -2,3 +2,7 @@ atencao_basica.rds
 df_final.rds
 sisvan_estab.rds
 vulnerabilidade.rds
+pnae_recurso.rds
+pnae_alunos_atendidos.rds
+pnae_conselho_alim_esco.rds
+pnae_escolas.rds
