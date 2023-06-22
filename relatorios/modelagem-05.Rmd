@@ -1,0 +1,45 @@
+---
+title: "Modelagem 05"
+author: "Panosso AR & Oliveira JA"
+date: "2023-06-22"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	error = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+library(lubridate)
+library(bit64)
+library(ggpubr)
+library(stringr)
+library(sf)
+source("../R/my-functions.R")
+```
+
+### Análise de modelagem 05
+
+```{r}
+recursos <- read_rds("../data/pnae_recurso.rds")
+glimpse(recursos)
+```
+```{r}
+recursos  %>% 
+  group_by(ano,esfera_governo) %>% 
+  summarise(
+    valor_total = sum(vl_total_escolas, na.rm = TRUE)
+  ) %>% 
+  ggplot(aes(x=ano, y=valor_total, fill = esfera_governo)) +
+  geom_col(position = "dodge", color="black") +
+  facet_wrap(~esfera_governo, scale="free") +
+  scale_fill_manual(values = c("lightgreen","yellow")) +
+  theme(legend.position="bottom") +
+  theme_bw()
+```
+
