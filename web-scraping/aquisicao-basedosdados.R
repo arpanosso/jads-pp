@@ -45,8 +45,9 @@ write_rds(df_nome %>% filter(sigla_uf == "SP"),
 #                       filter(na_count != 8) ,"data/permanente.xlsx")
 
 
-#
-#
+# query <- bdplyr("br_ibge_pam.municipio_lavouras_temporarias")
+# df_temporaria <- bd_collect(query)
+
 # glimpse(df_temporaria)
 # temporaria <- left_join(df_temporaria %>% filter(sigla_uf == "SP"),
 #                         df_nome %>% select(id_municipio, nome),"id_municipio"
