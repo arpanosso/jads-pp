@@ -1,6 +1,12 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+## Carregando Pacotes
+
+``` r
+library(tidyverse)
+```
+
 ------------------------------------------------------------------------
 
 **DESAFIO 1**. Promover o acesso universal à alimentação adequada e
@@ -14,6 +20,22 @@ alimentos.
 1.1.1 Pessoas Beneficiárias  
 1.1.2 Famílias Beneficiárias  
 1.1.3 Valor Pago
+
+``` r
+im <- read_rds("data/im.rds")
+glimpse(im)
+#> Rows: 129,645
+#> Columns: 9
+#> $ id_municipio               <chr> "3500105", "3500105", "3500105", "3500105",~
+#> $ ano                        <int> 2004, 2004, 2004, 2004, 2004, 2004, 2004, 2~
+#> $ mes                        <int> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2~
+#> $ familias_beneficiarias_pbf <int> 381, 381, 381, 381, 381, 381, 381, 380, 414~
+#> $ pessoas_beneficiarias_pbf  <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,~
+#> $ valor_pago_pbf             <dbl> 23430, 23430, 23430, 23220, 23160, 23100, 2~
+#> $ familias_cadastradas_cu    <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,~
+#> $ pessoas_cadastradas_cu     <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,~
+#> $ nome                       <chr> "Adamantina", "Adamantina", "Adamantina", "~
+```
 
 ------------------------------------------------------------------------
 
@@ -30,6 +52,43 @@ extrativistas e ribeirinhos; Acesso a políticas públicas.
 Sustentáveis Desafios: o conjunto dos desafios 3, 4 e 5 contemplam este
 macro desafio.
 
+``` r
+consumo <- read_rds("data/consumo/consumo.rds")
+glimpse(consumo)
+#> Rows: 63,004
+#> Columns: 10
+#> $ faixa_etaria   <chr> "2-anos-ou-mais", "2-anos-ou-mais", "2-anos-ou-mais", "~
+#> $ fase_da_vida   <chr> "adolecentes", "adolecentes", "adolecentes", "adolecent~
+#> $ tipo_relatorio <chr> "CONS_3REFEICOES", "CONS_3REFEICOES", "CONS_3REFEICOES"~
+#> $ ano            <int> 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2~
+#> $ uf             <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "SP", "SP", "~
+#> $ codigo_ibge    <dbl> 350010, 350030, 350055, 350080, 350100, 350110, 350140,~
+#> $ municipio      <chr> "ADAMANTINA", "AGUAÍ", "ÁGUAS DE SANTA BÁRBARA", "ALFRE~
+#> $ total          <dbl> 5, 3, 0, 21, 4, 1, 0, 33, 10, 0, 1, 133, 92, 38, 1, 1, ~
+#> $ percent        <dbl> 0.8333333, 0.7500000, 0.0000000, 0.6000000, 0.8000000, ~
+#> $ monitorados    <dbl> 6, 4, 1, 35, 5, 1, 46, 47, 46, 11, 1, 161, 145, 48, 1, ~
+```
+
+``` r
+estado_nutricional <- read_rds("data/df_final.rds")
+glimpse(estado_nutricional)
+#> Rows: 541,800
+#> Columns: 13
+#> $ ano          <dbl> 2008, 2008, 2008, 2008, 2008, 2008, 2008, 2008, 2008, 200~
+#> $ fase_da_vida <chr> "Criança", "Criança", "Criança", "Criança", "Criança", "C~
+#> $ idade        <chr> "0-4", "0-4", "0-4", "0-4", "0-4", "0-4", "0-4", "0-4", "~
+#> $ indice       <chr> "Peso X Idade", "Peso X Idade", "Peso X Idade", "Peso X I~
+#> $ indice_cri   <chr> "Peso X Idade", "Peso X Idade", "Peso X Idade", "Peso X I~
+#> $ indice_ado   <chr> "Altura X Idade", "Altura X Idade", "Altura X Idade", "Al~
+#> $ regiao       <chr> "SUDESTE", "SUDESTE", "SUDESTE", "SUDESTE", "SUDESTE", "S~
+#> $ codigo_uf    <chr> "35", "35", "35", "35", "35", "35", "35", "35", "35", "35~
+#> $ uf           <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "SP", "SP", "SP~
+#> $ id_municipio <chr> "350010", "350010", "350010", "350010", "350020", "350020~
+#> $ municipio    <chr> "Adamantina", "Adamantina", "Adamantina", "Adamantina", "~
+#> $ classe       <chr> "muito_baixo", "baixo", "adequado", "elevado", "muito_bai~
+#> $ valor        <dbl> 4, 4, 543, 48, 0, 0, 19, 1, 4, 2, 162, 16, 0, 1, 71, 2, 0~
+```
+
 ------------------------------------------------------------------------
 
 **DESAFIO 3**. Promover a produção de alimentos saudáveis e
@@ -44,9 +103,49 @@ climáticas.
 3.2 Área Plantada  
 3.2.1 Área Plantada Agricultura Familiar  
 3.2.2 Área Plantada Agricultura não familiar  
-3.3. rendimento médio  
+3.3. Rendimento Médio  
 3.4 Proporção Área Colhida  
 3.5 Proporção Valor da Produção
+
+``` r
+lavoura_permanente <- read_rds("data/permanente.rds")
+glimpse(lavoura_permanente)
+#> Rows: 1,115,224
+#> Columns: 13
+#> $ ano                  <int> 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1~
+#> $ sigla_uf             <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "SP", "~
+#> $ id_municipio         <chr> "3500105", "3500105", "3500105", "3500204", "3500~
+#> $ produto              <chr> "Coco-da-baía", "Erva-mate (folha verde)", "Tange~
+#> $ area_plantada        <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N~
+#> $ area_colhida         <int> NA, NA, NA, NA, NA, NA, NA, NA, 877, NA, NA, NA, ~
+#> $ quantidade_produzida <int> NA, NA, NA, NA, NA, NA, NA, NA, 712, NA, NA, NA, ~
+#> $ rendimento_medio     <int> NA, NA, NA, NA, NA, NA, NA, NA, 812, NA, NA, NA, ~
+#> $ valor_producao       <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N~
+#> $ prop_area_plantada   <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N~
+#> $ prop_area_colhida    <dbl> NA, NA, NA, NA, NA, NA, NA, NA, 96.16, NA, NA, NA~
+#> $ prop_valor_producao  <dbl> NA, NA, NA, NA, NA, NA, NA, NA, 94.56, NA, NA, NA~
+#> $ nome                 <chr> "Adamantina", "Adamantina", "Adamantina", "Adolfo~
+```
+
+``` r
+lavoura_temporaria <- read_rds("data/temporaria.rds")
+glimpse(lavoura_temporaria)
+#> Rows: 974,556
+#> Columns: 13
+#> $ ano                  <int> 1974, 1974, 1974, 1974, 1974, 1974, 1974, 1974, 1~
+#> $ sigla_uf             <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "SP", "~
+#> $ id_municipio         <chr> "3500105", "3500105", "3500105", "3500105", "3500~
+#> $ produto              <chr> "Alfafa fenada", "Cevada (em grão)", "Ervilha (em~
+#> $ area_plantada        <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N~
+#> $ area_colhida         <int> NA, NA, NA, NA, NA, NA, 2000, NA, NA, NA, NA, 180~
+#> $ quantidade_produzida <int> NA, NA, NA, NA, NA, NA, 3600, NA, NA, NA, NA, 305~
+#> $ rendimento_medio     <int> NA, NA, NA, NA, NA, NA, 1800, NA, NA, NA, NA, 169~
+#> $ valor_producao       <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N~
+#> $ prop_area_plantada   <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N~
+#> $ prop_area_colhida    <dbl> NA, NA, NA, NA, NA, NA, 58.82, NA, NA, NA, NA, 1.~
+#> $ prop_valor_producao  <dbl> NA, NA, NA, NA, NA, NA, 48.23, NA, NA, NA, NA, 1.~
+#> $ nome                 <chr> "Adamantina", "Adamantina", "Adamantina", "Adaman~
+```
 
 ------------------------------------------------------------------------
 
@@ -61,7 +160,159 @@ SAN; Agricultura urbana.
 4.1.1 Número de Alunos Beneficiários  
 4.1.2 Valor gasto com Compras da Agricultura Familiar 30%  
 4.1.3 Valor Formalizado  
-4.1.4 Valor Executado  
+4.1.4 Valor Executado
+
+``` r
+pnae_alunos <- read_rds("data/pnae_alunos_atendidos.rds")
+glimpse(pnae_alunos)
+#> Rows: 79,548
+#> Columns: 32
+#> $ co_alunos_atendidos       <dbl> 6344929, 6344930, 6344931, 6344932, 6344933,~
+#> $ ano                       <dbl> 1999, 1999, 1999, 1999, 1999, 1999, 1999, 19~
+#> $ estado                    <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "S~
+#> $ municipio                 <chr> "ADAMANTINA", "ADAMANTINA", "ADOLFO", "AGUAI~
+#> $ regiao                    <chr> "SUDESTE", "SUDESTE", "SUDESTE", "SUDESTE", ~
+#> $ esfera_governo            <chr> "ESTADUAL", "MUNICIPAL", "MUNICIPAL", "ESTAD~
+#> $ etapa_ensino              <chr> "ENSINO FUNDAMENTAL", "ENSINO FUNDAMENTAL", ~
+#> $ qt_alunos_pnae            <dbl> 3329, 2185, 749, 3340, 1897, 498, 802, 2323,~
+#> $ nomin                     <chr> "ADAMANTINA", "ADAMANTINA", "ADOLFO", "AGUAI~
+#> $ id_municipio              <chr> "3500105", "3500105", "3500204", "3500303", ~
+#> $ id_municipio_6            <chr> "350010", "350010", "350020", "350030", "350~
+#> $ id_municipio_tse          <chr> "61018", "61018", "61034", "61050", "61050",~
+#> $ id_municipio_rf           <chr> "6101", "6101", "6103", "6105", "6105", "610~
+#> $ id_municipio_bcb          <chr> "20248", "20248", "24677", "29517", "29517",~
+#> $ nome                      <chr> "Adamantina", "Adamantina", "Adolfo", "Aguaí~
+#> $ capital_uf                <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+#> $ id_comarca                <chr> "3500105", "3500105", "3525706", "3500303", ~
+#> $ id_regiao_saude           <chr> "35091", "35091", "35156", "35142", "35142",~
+#> $ nome_regiao_saude         <chr> "Adamantina", "Adamantina", "José Bonifácio"~
+#> $ id_regiao_imediata        <chr> "350019", "350019", "350025", "350044", "350~
+#> $ nome_regiao_imediata      <chr> "Adamantina - Lucélia", "Adamantina - Lucéli~
+#> $ id_regiao_intermediaria   <chr> "3505", "3505", "3507", "3510", "3510", "351~
+#> $ nome_regiao_intermediaria <chr> "Presidente Prudente", "Presidente Prudente"~
+#> $ id_microrregiao           <chr> "35035", "35035", "35004", "35029", "35029",~
+#> $ nome_microrregiao         <chr> "Adamantina", "Adamantina", "São José do Rio~
+#> $ id_mesorregiao            <chr> "3508", "3508", "3501", "3507", "3507", "350~
+#> $ nome_mesorregiao          <chr> "Presidente Prudente", "Presidente Prudente"~
+#> $ ddd                       <chr> "18", "18", "17", "19", "19", "19", "19", "1~
+#> $ id_uf                     <chr> "35", "35", "35", "35", "35", "35", "35", "3~
+#> $ sigla_uf                  <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "S~
+#> $ nome_uf                   <chr> "São Paulo", "São Paulo", "São Paulo", "São ~
+#> $ nome_regiao               <chr> "Sudeste", "Sudeste", "Sudeste", "Sudeste", ~
+```
+
+``` r
+pnae_recurso <- read_rds("data/pnae_recurso.rds")
+glimpse(pnae_recurso)
+#> Rows: 2,191,590
+#> Columns: 31
+#> $ co_recursos_repassados    <dbl> 381758, 381759, 381760, 381761, 381762, 3817~
+#> $ ano                       <dbl> 1999, 1999, 1999, 1999, 1999, 1999, 1999, 19~
+#> $ estado                    <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "S~
+#> $ municipio                 <chr> "ADAMANTINA", "ADOLFO", "AGUAI", "AGUAS DA P~
+#> $ esfera_governo            <chr> "MUNICIPAL", "MUNICIPAL", "MUNICIPAL", "MUNI~
+#> $ modalidade_ensino         <chr> "ENSINO FUNDAMENTAL", "ENSINO FUNDAMENTAL", ~
+#> $ vl_total_escolas          <dbl> 13158985, 1817118, 12468183, 3048183, 697171~
+#> $ nomin                     <chr> "ADAMANTINA", "ADOLFO", "AGUAI", "AGUAS DA P~
+#> $ id_municipio              <chr> "3500105", "3500204", "3500303", "3500402", ~
+#> $ id_municipio_6            <chr> "350010", "350020", "350030", "350040", "350~
+#> $ id_municipio_tse          <chr> "61018", "61034", "61050", "61077", "61093",~
+#> $ id_municipio_rf           <chr> "6101", "6103", "6105", "6107", "6109", "701~
+#> $ id_municipio_bcb          <chr> "20248", "24677", "29517", "34117", "38553",~
+#> $ nome                      <chr> "Adamantina", "Adolfo", "Aguaí", "Águas da P~
+#> $ capital_uf                <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+#> $ id_comarca                <chr> "3500105", "3525706", "3500303", "3549102", ~
+#> $ id_regiao_saude           <chr> "35091", "35156", "35142", "35142", "35074",~
+#> $ nome_regiao_saude         <chr> "Adamantina", "José Bonifácio", "Mantiqueira~
+#> $ id_regiao_imediata        <chr> "350019", "350025", "350044", "350044", "350~
+#> $ nome_regiao_imediata      <chr> "Adamantina - Lucélia", "São José do Rio Pre~
+#> $ id_regiao_intermediaria   <chr> "3505", "3507", "3510", "3510", "3510", "350~
+#> $ nome_regiao_intermediaria <chr> "Presidente Prudente", "São José do Rio Pret~
+#> $ id_microrregiao           <chr> "35035", "35004", "35029", "35030", "35033",~
+#> $ nome_microrregiao         <chr> "Adamantina", "São José do Rio Preto", "Pira~
+#> $ id_mesorregiao            <chr> "3508", "3501", "3507", "3507", "3507", "350~
+#> $ nome_mesorregiao          <chr> "Presidente Prudente", "São José do Rio Pret~
+#> $ ddd                       <chr> "18", "17", "19", "19", "19", "14", "19", "1~
+#> $ id_uf                     <chr> "35", "35", "35", "35", "35", "35", "35", "3~
+#> $ sigla_uf                  <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "S~
+#> $ nome_uf                   <chr> "São Paulo", "São Paulo", "São Paulo", "São ~
+#> $ nome_regiao               <chr> "Sudeste", "Sudeste", "Sudeste", "Sudeste", ~
+```
+
+``` r
+pnae_escola <- read_rds("data/pnae_escolas.rds")
+glimpse(pnae_escola)
+#> Rows: 22,270
+#> Columns: 30
+#> $ cod_escolas_atendidas     <dbl> 1024713, 1024714, 1024715, 1024716, 1024717,~
+#> $ ano                       <dbl> 2009, 2009, 2009, 2009, 2009, 2009, 2009, 20~
+#> $ uf                        <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "S~
+#> $ municipio                 <chr> "ADAMANTINA", "ADAMANTINA", "ADAMANTINA", "A~
+#> $ esfera_governo            <chr> "ADMINISTRAÇÃO", "ADMINISTRAÇÃO", "PARTICULA~
+#> $ qtd_escolas_atendidas     <dbl> 5, 14, 1, 1, 2, 1, 4, 12, 1, 2, 4, 1, 2, 11,~
+#> $ nomin                     <chr> "ADAMANTINA", "ADAMANTINA", "ADAMANTINA", "A~
+#> $ id_municipio              <chr> "3500105", "3500105", "3500105", "3500204", ~
+#> $ id_municipio_6            <chr> "350010", "350010", "350010", "350020", "350~
+#> $ id_municipio_tse          <chr> "61018", "61018", "61018", "61034", "61034",~
+#> $ id_municipio_rf           <chr> "6101", "6101", "6101", "6103", "6103", "610~
+#> $ id_municipio_bcb          <chr> "20248", "20248", "20248", "24677", "24677",~
+#> $ nome                      <chr> "Adamantina", "Adamantina", "Adamantina", "A~
+#> $ capital_uf                <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+#> $ id_comarca                <chr> "3500105", "3500105", "3500105", "3525706", ~
+#> $ id_regiao_saude           <chr> "35091", "35091", "35091", "35156", "35156",~
+#> $ nome_regiao_saude         <chr> "Adamantina", "Adamantina", "Adamantina", "J~
+#> $ id_regiao_imediata        <chr> "350019", "350019", "350019", "350025", "350~
+#> $ nome_regiao_imediata      <chr> "Adamantina - Lucélia", "Adamantina - Lucéli~
+#> $ id_regiao_intermediaria   <chr> "3505", "3505", "3505", "3507", "3507", "350~
+#> $ nome_regiao_intermediaria <chr> "Presidente Prudente", "Presidente Prudente"~
+#> $ id_microrregiao           <chr> "35035", "35035", "35035", "35004", "35004",~
+#> $ nome_microrregiao         <chr> "Adamantina", "Adamantina", "Adamantina", "S~
+#> $ id_mesorregiao            <chr> "3508", "3508", "3508", "3501", "3501", "350~
+#> $ nome_mesorregiao          <chr> "Presidente Prudente", "Presidente Prudente"~
+#> $ ddd                       <chr> "18", "18", "18", "17", "17", "17", "19", "1~
+#> $ id_uf                     <chr> "35", "35", "35", "35", "35", "35", "35", "3~
+#> $ sigla_uf                  <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "S~
+#> $ nome_uf                   <chr> "São Paulo", "São Paulo", "São Paulo", "São ~
+#> $ nome_regiao               <chr> "Sudeste", "Sudeste", "Sudeste", "Sudeste", ~
+```
+
+``` r
+pnae_conselho <- read_rds("data/pnae_conselho_alim_esco.rds")
+glimpse(pnae_conselho)
+#> Rows: 22,270
+#> Columns: 30
+#> $ cod_escolas_atendidas     <dbl> 1024713, 1024714, 1024715, 1024716, 1024717,~
+#> $ ano                       <dbl> 2009, 2009, 2009, 2009, 2009, 2009, 2009, 20~
+#> $ uf                        <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "S~
+#> $ municipio                 <chr> "ADAMANTINA", "ADAMANTINA", "ADAMANTINA", "A~
+#> $ esfera_governo            <chr> "ADMINISTRAÇÃO", "ADMINISTRAÇÃO", "PARTICULA~
+#> $ qtd_escolas_atendidas     <dbl> 5, 14, 1, 1, 2, 1, 4, 12, 1, 2, 4, 1, 2, 11,~
+#> $ nomin                     <chr> "ADAMANTINA", "ADAMANTINA", "ADAMANTINA", "A~
+#> $ id_municipio              <chr> "3500105", "3500105", "3500105", "3500204", ~
+#> $ id_municipio_6            <chr> "350010", "350010", "350010", "350020", "350~
+#> $ id_municipio_tse          <chr> "61018", "61018", "61018", "61034", "61034",~
+#> $ id_municipio_rf           <chr> "6101", "6101", "6101", "6103", "6103", "610~
+#> $ id_municipio_bcb          <chr> "20248", "20248", "20248", "24677", "24677",~
+#> $ nome                      <chr> "Adamantina", "Adamantina", "Adamantina", "A~
+#> $ capital_uf                <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+#> $ id_comarca                <chr> "3500105", "3500105", "3500105", "3525706", ~
+#> $ id_regiao_saude           <chr> "35091", "35091", "35091", "35156", "35156",~
+#> $ nome_regiao_saude         <chr> "Adamantina", "Adamantina", "Adamantina", "J~
+#> $ id_regiao_imediata        <chr> "350019", "350019", "350019", "350025", "350~
+#> $ nome_regiao_imediata      <chr> "Adamantina - Lucélia", "Adamantina - Lucéli~
+#> $ id_regiao_intermediaria   <chr> "3505", "3505", "3505", "3507", "3507", "350~
+#> $ nome_regiao_intermediaria <chr> "Presidente Prudente", "Presidente Prudente"~
+#> $ id_microrregiao           <chr> "35035", "35035", "35035", "35004", "35004",~
+#> $ nome_microrregiao         <chr> "Adamantina", "Adamantina", "Adamantina", "S~
+#> $ id_mesorregiao            <chr> "3508", "3508", "3508", "3501", "3501", "350~
+#> $ nome_mesorregiao          <chr> "Presidente Prudente", "Presidente Prudente"~
+#> $ ddd                       <chr> "18", "18", "18", "17", "17", "17", "19", "1~
+#> $ id_uf                     <chr> "35", "35", "35", "35", "35", "35", "35", "3~
+#> $ sigla_uf                  <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "S~
+#> $ nome_uf                   <chr> "São Paulo", "São Paulo", "São Paulo", "São ~
+#> $ nome_regiao               <chr> "Sudeste", "Sudeste", "Sudeste", "Sudeste", ~
+```
+
 **4.2 Banco de Leite **  
 4.2.1 Próprio  
 4.2.2 Terceirizado  
@@ -71,6 +322,26 @@ SAN; Agricultura urbana.
 **4.4 Serviço Nutrição**  
 4.4.1 Próprio  
 4.4.2 Terceirizado
+
+``` r
+sisvan_estab <- read_rds("data/sisvan_estab.rds")
+glimpse(sisvan_estab)
+#> Rows: 12,622,130
+#> Columns: 13
+#> $ files_way                                  <chr> "1", "1", "1", "1", "1", "1~
+#> $ ano                                        <dbl> 2006, 2006, 2006, 2006, 200~
+#> $ mes                                        <int> 2, 2, 2, 2, 2, 2, 2, 2, 2, ~
+#> $ sigla_uf                                   <chr> "SP", "SP", "SP", "SP", "SP~
+#> $ id_municipio                               <chr> "3501608", "3501608", "3504~
+#> $ id_municipio_6                             <chr> "350160", "350160", "350410~
+#> $ indicador_servico_nutricao_proprio         <int> 0, 1, 0, 0, 0, 1, 1, 0, 0, ~
+#> $ indicador_servico_nutricao_terceirizado    <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, ~
+#> $ indicador_servico_lactario_proprio         <int> 0, 0, 0, 0, 0, 1, 1, 0, 0, ~
+#> $ indicador_servico_lactario_terceirizado    <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, ~
+#> $ indicador_servico_banco_leite_proprio      <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, ~
+#> $ indicador_servico_banco_leite_terceirizado <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, ~
+#> $ municipio                                  <chr> "Americana", "Americana", "~
+```
 
 ------------------------------------------------------------------------
 
@@ -205,715 +476,4 @@ mais
 10.10 População Economicamente Ativa (PEA) com 15 a 17 anos  
 10.11 População Economicamente Ativa (PEA) com 18 anos ou mais
 
-# diagnosticos-pp 2023
-
-<!-- badges: start -->
-<!-- badges: end -->
-
-## Carregando o banco de dados
-
-``` r
-library(tidyverse)
-saude <- readr::read_rds("data/saude.rds") %>% 
-  dplyr::mutate(tipo = stringr::str_to_lower(tipo))
-dplyr::glimpse(saude)
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-```
-
-## Visualizando a série temporal
-
-``` r
-saude %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,color=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_line() +
-  ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_color_viridis_d()+
-  ggplot2::theme_classic()
-```
-
-![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
-
-## Consumo de ultraprocessados
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% 
-  dplyr::filter(tipo == "ultra") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  ggplot2::coord_cartesian(ylim=c(.5,1))
-```
-
-![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano <= 2019) %>% 
-  dplyr::filter(tipo == "ultra") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,color=id))+
-  ggplot2::geom_point(shape=16,size=4) +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_color_viridis_d()+
-  ggplot2::theme_classic() + 
-  ggplot2::coord_cartesian(ylim=c(.5,1))+
-  ggplot2::geom_smooth(method = "lm",se=FALSE) +
-  ggpubr::stat_regline_equation(label.y = seq(.5,.6,.025) )
-```
-
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "ultra") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=as.factor(ano),y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  ggplot2::coord_cartesian(ylim=c(.5,1)) +
-  ggplot2::labs(x="Ano")
-```
-
-![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "ultra") %>% 
-  tidyr::pivot_wider(names_from = ano, values_from = perc,id_cols = id) %>% 
-  dplyr::mutate(dif = (`2021` - `2020`)*100)
-#> # A tibble: 5 x 4
-#>   id          `2020` `2021`    dif
-#>   <chr>        <dbl>  <dbl>  <dbl>
-#> 1 2_4          0.843  0.931  8.74 
-#> 2 5_9          0.933  0.947  1.42 
-#> 3 adolecentes  0.935  0.944  0.912
-#> 4 adultos      0.792  0.908 11.6  
-#> 5 idosos       0.637  0.866 22.9
-```
-
-## Três refeições ao dia
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% 
-  dplyr::filter(tipo == "3r") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() # 
-```
-
-![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
-
-``` r
-  #ggplot2::coord_cartesian(ylim=c(.5,1))
-```
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano <= 2019) %>% 
-  dplyr::filter(tipo == "3r") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,color=id))+
-  ggplot2::geom_point(shape=16,size=4) +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_color_viridis_d()+
-  ggplot2::theme_classic() + 
-  # ggplot2::coord_cartesian(ylim=c(.5,1))+
-  ggplot2::geom_smooth(method = "lm",se=FALSE) +
-  ggpubr::stat_regline_equation(label.y = seq(.6,.7,.025),
-                                label.x = rep(2017,5))
-```
-
-![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "3r") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=as.factor(ano),y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  #ggplot2::coord_cartesian(ylim=c(.5,1)) +
-  ggplot2::labs(x="Ano")
-```
-
-![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano < 2017) %>% 
-  dplyr::filter(tipo == "3r") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=as.factor(ano),y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  #ggplot2::coord_cartesian(ylim=c(.5,1)) +
-  ggplot2::labs(x="Ano")
-```
-
-![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "3r") %>% 
-  tidyr::pivot_wider(names_from = ano, values_from = perc,id_cols = id) %>% 
-  dplyr::mutate(dif = (`2021` - `2020`)*100)
-#> # A tibble: 5 x 4
-#>   id          `2020` `2021`   dif
-#>   <chr>        <dbl>  <dbl> <dbl>
-#> 1 2_4          0.414  0.643  22.8
-#> 2 5_9          0.787  0.295 -49.1
-#> 3 adolecentes  0.747  0.286 -46.1
-#> 4 adultos      0.824  0.301 -52.3
-#> 5 idosos       0.838  0.284 -55.4
-```
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano < 2017) %>% 
-  dplyr::filter(tipo == "3r") %>% 
-  tidyr::pivot_wider(names_from = ano, values_from = perc,id_cols = id) %>% 
-  dplyr::mutate(dif = (`2016` - `2015`)*100)
-#> # A tibble: 5 x 4
-#>   id          `2015` `2016`   dif
-#>   <chr>        <dbl>  <dbl> <dbl>
-#> 1 2_4          0.269  0.861  59.2
-#> 2 5_9          0.739  0.366 -37.3
-#> 3 adolecentes  0.634  0.325 -30.9
-#> 4 adultos      0.559  0.313 -24.6
-#> 5 idosos       0.540  0.337 -20.4
-```
-
-## Consumo de embutidos
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% 
-  dplyr::filter(tipo == "eb") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() #+ 
-```
-
-![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
-
-``` r
- # ggplot2::coord_cartesian(ylim=c(.5,1))
-```
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano <= 2019) %>% 
-  dplyr::filter(tipo == "eb") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,color=id))+
-  ggplot2::geom_point(shape=16,size=4) +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_color_viridis_d()+
-  ggplot2::theme_classic() + 
-  # ggplot2::coord_cartesian(ylim=c(.5,1))+
-  ggplot2::geom_smooth(method = "lm",se=FALSE) +
-  ggpubr::stat_regline_equation(label.y = seq(.5,.6,.025),
-                                label.x= rep(2016,5))
-```
-
-![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "eb") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=as.factor(ano),y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  # ggplot2::coord_cartesian(ylim=c(.5,1)) +
-  ggplot2::labs(x="Ano")
-```
-
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "eb") %>% 
-  tidyr::pivot_wider(names_from = ano, values_from = perc,id_cols = id) %>% 
-  dplyr::mutate(dif = (`2021` - `2020`)*100)
-#> # A tibble: 5 x 4
-#>   id          `2020` `2021`   dif
-#>   <chr>        <dbl>  <dbl> <dbl>
-#> 1 2_4          0.330  0.686 35.6 
-#> 2 5_9          0.489  0.566  7.74
-#> 3 adolecentes  0.545  0.587  4.15
-#> 4 adultos      0.368  0.591 22.3 
-#> 5 idosos       0.637  0.602 -3.44
-```
-
-## Feijão
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% 
-  dplyr::filter(tipo == "feijao") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() #+ 
-```
-
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
-
-``` r
-  #ggplot2::coord_cartesian(ylim=c(.5,1))
-```
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano <= 2019) %>% 
-  dplyr::filter(tipo == "feijao") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,color=id))+
-  ggplot2::geom_point(shape=16,size=4) +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_color_viridis_d()+
-  ggplot2::theme_classic() + 
-  ggplot2::coord_cartesian(ylim=c(.6,1))+
-  ggplot2::geom_smooth(method = "lm",se=FALSE) +
-  ggpubr::stat_regline_equation(label.y = seq(.6,.7,.025),
-                                label.x = rep(2017,5))
-```
-
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "feijao") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=as.factor(ano),y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  # ggplot2::coord_cartesian(ylim=c(.5,1)) +
-  ggplot2::labs(x="Ano")
-```
-
-![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "feijao") %>% 
-  tidyr::pivot_wider(names_from = ano, values_from = perc,id_cols = id) %>% 
-  dplyr::mutate(dif = (`2021` - `2020`)*100)
-#> # A tibble: 5 x 4
-#>   id          `2020` `2021`   dif
-#>   <chr>        <dbl>  <dbl> <dbl>
-#> 1 2_4          0.8    0.274 -52.6
-#> 2 5_9          0.770  0.323 -44.7
-#> 3 adolecentes  0.801  0.318 -48.3
-#> 4 adultos      0.837  0.290 -54.8
-#> 5 idosos       0.860  0.271 -59.0
-```
-
-## Frutas
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% 
-  dplyr::filter(tipo == "frutas") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() #+ 
-```
-
-![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
-
-``` r
-  #ggplot2::coord_cartesian(ylim=c(.5,1))
-```
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano <= 2019) %>% 
-  dplyr::filter(tipo == "frutas") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,color=id))+
-  ggplot2::geom_point(shape=16,size=4) +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_color_viridis_d()+
-  ggplot2::theme_classic() + 
-  ggplot2::coord_cartesian(ylim=c(.4,1))+
-  ggplot2::geom_smooth(method = "lm",se=FALSE) +
-  ggpubr::stat_regline_equation(label.y = seq(.8,.9,.025),
-                                label.x = rep(2017,5))
-```
-
-![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "frutas") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=as.factor(ano),y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  # ggplot2::coord_cartesian(ylim=c(.5,1)) +
-  ggplot2::labs(x="Ano")
-```
-
-![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "frutas") %>% 
-  tidyr::pivot_wider(names_from = ano, values_from = perc,id_cols = id) %>% 
-  dplyr::mutate(dif = (`2021` - `2020`)*100)
-#> # A tibble: 5 x 4
-#>   id          `2020` `2021`   dif
-#>   <chr>        <dbl>  <dbl> <dbl>
-#> 1 2_4          0.739  0.239 -50.0
-#> 2 5_9          0.708  0.242 -46.6
-#> 3 adolecentes  0.567  0.219 -34.8
-#> 4 adultos      0.683  0.224 -45.8
-#> 5 idosos       0.752  0.224 -52.8
-```
-
-## Guloseimas
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% 
-  dplyr::filter(tipo == "gl") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() #+ 
-```
-
-![](README_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
-
-``` r
-  #ggplot2::coord_cartesian(ylim=c(.5,1))
-```
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano <= 2019) %>% 
-  dplyr::filter(tipo == "gl") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,color=id))+
-  ggplot2::geom_point(shape=16,size=4) +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_color_viridis_d()+
-  ggplot2::theme_classic() + 
-  #ggplot2::coord_cartesian(ylim=c(.6,1))+
-  ggplot2::geom_smooth(method = "lm",se=FALSE) +
-  ggpubr::stat_regline_equation(label.y = seq(.42,.52,.025),
-                                label.x = rep(2017,5))
-```
-
-![](README_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "gl") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=as.factor(ano),y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  # ggplot2::coord_cartesian(ylim=c(.5,1)) +
-  ggplot2::labs(x="Ano")
-```
-
-![](README_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
-
-``` r
-dplyr::glimpse(saude)  
-#> Rows: 315
-#> Columns: 7
-#> $ cidade  <chr> "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru", "Bauru",~
-#> $ ano     <dbl> 2015, 2015, 2015, 2015, 2015, 2016, 2016, 2016, 2016, 2016, 20~
-#> $ id      <chr> "2_4", "5_9", "adolecentes", "adultos", "idosos", "2_4", "5_9"~
-#> $ tipo    <chr> "ultra", "ultra", "ultra", "ultra", "ultra", "ultra", "ultra",~
-#> $ total   <dbl> 56, 46, 145, 687, 311, 181, 123, 369, 2390, 1444, 220, 270, 56~
-#> $ amostra <dbl> 52, 42, 131, 512, 193, 163, 113, 340, 1889, 965, 201, 251, 517~
-#> $ perc    <dbl> 0.9285714, 0.9130435, 0.9034483, 0.7452693, 0.6205788, 0.90055~
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "gl") %>% 
-  tidyr::pivot_wider(names_from = ano, values_from = perc,id_cols = id) %>% 
-  dplyr::mutate(dif = (`2021` - `2020`)*100)
-#> # A tibble: 5 x 4
-#>   id          `2020` `2021`   dif
-#>   <chr>        <dbl>  <dbl> <dbl>
-#> 1 2_4          0.574  0.636  6.17
-#> 2 5_9          0.764  0.711 -5.28
-#> 3 adolecentes  0.643  0.709  6.69
-#> 4 adultos      0.346  0.507 16.1 
-#> 5 idosos       0.192  0.339 14.7
-```
+------------------------------------------------------------------------

@@ -33,7 +33,7 @@ Temas: Transferência de Renda; Alimentação escolar; Distribuição de aliment
 
 ```{r}
 im <- read_rds("data/im.rds")
-skimr::skim(im)
+glimpse(im)
 ```
 
 
@@ -49,14 +49,12 @@ Temas: Insegurança alimentar e nutricional; Inclusão produtiva rural; Acesso �
 ```{r}
 consumo <- read_rds("data/consumo/consumo.rds")
 glimpse(consumo)
-skimr::skim(consumo)
 ```
 
 
 ```{r}
 estado_nutricional <- read_rds("data/df_final.rds")
 glimpse(estado_nutricional)
-skimr::skim(estado_nutricional)
 ```
 
 
@@ -70,9 +68,19 @@ Temas: Fortalecimento da agricultura familiar; Reforma agrária; Transição agr
 3.2 Área Plantada  
 3.2.1 Área Plantada Agricultura Familiar  
 3.2.2 Área Plantada Agricultura não familiar  
-3.3. rendimento médio  
+3.3. Rendimento Médio  
 3.4 Proporção Área Colhida  
 3.5 Proporção Valor da Produção  
+
+```{r}
+lavoura_permanente <- read_rds("data/permanente.rds")
+glimpse(lavoura_permanente)
+```
+
+```{r}
+lavoura_temporaria <- read_rds("data/temporaria.rds")
+glimpse(lavoura_temporaria)
+```
 
 ---
 
@@ -85,6 +93,29 @@ Temas: Compras públicas; Abastecimento; Legislação sanitária; Economia solid
 4.1.2 Valor gasto com Compras da Agricultura Familiar 30%  
 4.1.3 Valor Formalizado   
 4.1.4 Valor Executado  
+
+```{r}
+pnae_alunos <- read_rds("data/pnae_alunos_atendidos.rds")
+glimpse(pnae_alunos)
+```
+
+
+```{r}
+pnae_recurso <- read_rds("data/pnae_recurso.rds")
+glimpse(pnae_recurso)
+```
+
+
+```{r}
+pnae_escola <- read_rds("data/pnae_escolas.rds")
+glimpse(pnae_escola)
+```
+
+```{r}
+pnae_conselho <- read_rds("data/pnae_conselho_alim_esco.rds")
+glimpse(pnae_conselho)
+```
+
 **4.2 Banco de Leite **  
 4.2.1 Próprio  
 4.2.2 Terceirizado  
@@ -94,6 +125,13 @@ Temas: Compras públicas; Abastecimento; Legislação sanitária; Economia solid
 **4.4 Serviço Nutrição**  
 4.4.1 Próprio  
 4.4.2 Terceirizado  
+
+
+```{r}
+sisvan_estab <- read_rds("data/sisvan_estab.rds")
+glimpse(sisvan_estab)
+```
+
 
 ---
 
@@ -187,356 +225,4 @@ Temas: Governança global; Cooperação internacional; Participação da socieda
 10.10 População Economicamente Ativa (PEA) com 15 a 17 anos  
 10.11 População Economicamente Ativa (PEA) com 18 anos ou mais  
 
-
-
-## Carregando o banco de dados
-```{r}
-library(tidyverse)
-saude <- readr::read_rds("data/saude.rds") %>% 
-  dplyr::mutate(tipo = stringr::str_to_lower(tipo))
-dplyr::glimpse(saude)
-```
-
-## Visualizando a série temporal
-```{r}
-saude %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,color=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_line() +
-  ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_color_viridis_d()+
-  ggplot2::theme_classic()
-```
-
-## Consumo de ultraprocessados
-```{r}
-dplyr::glimpse(saude)  
-saude %>% 
-  dplyr::filter(tipo == "ultra") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  ggplot2::coord_cartesian(ylim=c(.5,1))
-```
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano <= 2019) %>% 
-  dplyr::filter(tipo == "ultra") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,color=id))+
-  ggplot2::geom_point(shape=16,size=4) +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_color_viridis_d()+
-  ggplot2::theme_classic() + 
-  ggplot2::coord_cartesian(ylim=c(.5,1))+
-  ggplot2::geom_smooth(method = "lm",se=FALSE) +
-  ggpubr::stat_regline_equation(label.y = seq(.5,.6,.025) )
-```
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "ultra") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=as.factor(ano),y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  ggplot2::coord_cartesian(ylim=c(.5,1)) +
-  ggplot2::labs(x="Ano")
-```
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "ultra") %>% 
-  tidyr::pivot_wider(names_from = ano, values_from = perc,id_cols = id) %>% 
-  dplyr::mutate(dif = (`2021` - `2020`)*100)
-```
-
-
-
-## Três refeições ao dia
-```{r}
-dplyr::glimpse(saude)  
-saude %>% 
-  dplyr::filter(tipo == "3r") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() # 
-  #ggplot2::coord_cartesian(ylim=c(.5,1))
-```
-
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano <= 2019) %>% 
-  dplyr::filter(tipo == "3r") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,color=id))+
-  ggplot2::geom_point(shape=16,size=4) +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_color_viridis_d()+
-  ggplot2::theme_classic() + 
-  # ggplot2::coord_cartesian(ylim=c(.5,1))+
-  ggplot2::geom_smooth(method = "lm",se=FALSE) +
-  ggpubr::stat_regline_equation(label.y = seq(.6,.7,.025),
-                                label.x = rep(2017,5))
-```
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "3r") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=as.factor(ano),y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  #ggplot2::coord_cartesian(ylim=c(.5,1)) +
-  ggplot2::labs(x="Ano")
-```
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano < 2017) %>% 
-  dplyr::filter(tipo == "3r") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=as.factor(ano),y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  #ggplot2::coord_cartesian(ylim=c(.5,1)) +
-  ggplot2::labs(x="Ano")
-```
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "3r") %>% 
-  tidyr::pivot_wider(names_from = ano, values_from = perc,id_cols = id) %>% 
-  dplyr::mutate(dif = (`2021` - `2020`)*100)
-```
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano < 2017) %>% 
-  dplyr::filter(tipo == "3r") %>% 
-  tidyr::pivot_wider(names_from = ano, values_from = perc,id_cols = id) %>% 
-  dplyr::mutate(dif = (`2016` - `2015`)*100)
-```
-## Consumo de embutidos
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% 
-  dplyr::filter(tipo == "eb") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() #+ 
- # ggplot2::coord_cartesian(ylim=c(.5,1))
-```
-
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano <= 2019) %>% 
-  dplyr::filter(tipo == "eb") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,color=id))+
-  ggplot2::geom_point(shape=16,size=4) +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_color_viridis_d()+
-  ggplot2::theme_classic() + 
-  # ggplot2::coord_cartesian(ylim=c(.5,1))+
-  ggplot2::geom_smooth(method = "lm",se=FALSE) +
-  ggpubr::stat_regline_equation(label.y = seq(.5,.6,.025),
-                                label.x= rep(2016,5))
-```
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "eb") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=as.factor(ano),y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  # ggplot2::coord_cartesian(ylim=c(.5,1)) +
-  ggplot2::labs(x="Ano")
-```
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "eb") %>% 
-  tidyr::pivot_wider(names_from = ano, values_from = perc,id_cols = id) %>% 
-  dplyr::mutate(dif = (`2021` - `2020`)*100)
-```
-
-
-## Feijão 
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% 
-  dplyr::filter(tipo == "feijao") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() #+ 
-  #ggplot2::coord_cartesian(ylim=c(.5,1))
-```
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano <= 2019) %>% 
-  dplyr::filter(tipo == "feijao") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,color=id))+
-  ggplot2::geom_point(shape=16,size=4) +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_color_viridis_d()+
-  ggplot2::theme_classic() + 
-  ggplot2::coord_cartesian(ylim=c(.6,1))+
-  ggplot2::geom_smooth(method = "lm",se=FALSE) +
-  ggpubr::stat_regline_equation(label.y = seq(.6,.7,.025),
-                                label.x = rep(2017,5))
-```
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "feijao") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=as.factor(ano),y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  # ggplot2::coord_cartesian(ylim=c(.5,1)) +
-  ggplot2::labs(x="Ano")
-```
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "feijao") %>% 
-  tidyr::pivot_wider(names_from = ano, values_from = perc,id_cols = id) %>% 
-  dplyr::mutate(dif = (`2021` - `2020`)*100)
-```
-
-
-
-## Frutas 
-```{r}
-dplyr::glimpse(saude)  
-saude %>% 
-  dplyr::filter(tipo == "frutas") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() #+ 
-  #ggplot2::coord_cartesian(ylim=c(.5,1))
-```
-
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano <= 2019) %>% 
-  dplyr::filter(tipo == "frutas") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,color=id))+
-  ggplot2::geom_point(shape=16,size=4) +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_color_viridis_d()+
-  ggplot2::theme_classic() + 
-  ggplot2::coord_cartesian(ylim=c(.4,1))+
-  ggplot2::geom_smooth(method = "lm",se=FALSE) +
-  ggpubr::stat_regline_equation(label.y = seq(.8,.9,.025),
-                                label.x = rep(2017,5))
-```
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "frutas") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=as.factor(ano),y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  # ggplot2::coord_cartesian(ylim=c(.5,1)) +
-  ggplot2::labs(x="Ano")
-```
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "frutas") %>% 
-  tidyr::pivot_wider(names_from = ano, values_from = perc,id_cols = id) %>% 
-  dplyr::mutate(dif = (`2021` - `2020`)*100)
-```
-
-## Guloseimas
-```{r}
-dplyr::glimpse(saude)  
-saude %>% 
-  dplyr::filter(tipo == "gl") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() #+ 
-  #ggplot2::coord_cartesian(ylim=c(.5,1))
-```
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano <= 2019) %>% 
-  dplyr::filter(tipo == "gl") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=ano,y=perc,color=id))+
-  ggplot2::geom_point(shape=16,size=4) +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_color_viridis_d()+
-  ggplot2::theme_classic() + 
-  #ggplot2::coord_cartesian(ylim=c(.6,1))+
-  ggplot2::geom_smooth(method = "lm",se=FALSE) +
-  ggpubr::stat_regline_equation(label.y = seq(.42,.52,.025),
-                                label.x = rep(2017,5))
-```
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "gl") %>% 
-  ggplot2::ggplot(ggplot2::aes(x=as.factor(ano),y=perc,fill=id))+
-  #ggplot2::geom_col(position = "dodge")+
-  ggplot2::geom_col(position="dodge",color="black") +
-  # ggplot2::facet_wrap(~tipo,ncol=3)+
-  ggplot2::scale_fill_viridis_d()+
-  ggplot2::theme_classic() + 
-  # ggplot2::coord_cartesian(ylim=c(.5,1)) +
-  ggplot2::labs(x="Ano")
-```
-
-```{r}
-dplyr::glimpse(saude)  
-saude %>% dplyr::filter(ano > 2019) %>% 
-  dplyr::filter(tipo == "gl") %>% 
-  tidyr::pivot_wider(names_from = ano, values_from = perc,id_cols = id) %>% 
-  dplyr::mutate(dif = (`2021` - `2020`)*100)
-```
-
+---
