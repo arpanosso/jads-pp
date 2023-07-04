@@ -26,16 +26,16 @@ library(tidyverse)
 Temas: Transferência de Renda; Alimentação escolar; Distribuição de alimentos.
 
 1.1	Programa Bolsa Família  
-1.1.1	Pessoas Beneficiárias  
-1.1.2	 Famílias Beneficiárias  
-1.1.3	 Valor Pago  
+1.1.1	Pessoas Beneficiárias **(OK)**   
+1.1.2	 Famílias Beneficiárias **(OK)**    
+1.1.3	 Valor Pago  **(OK)**  
 
 
 ```{r}
-im <- read_rds("data/im.rds")
+im <- read_rds("data/im.rds") %>% 
+  select(nome,id_municipio:valor_pago_pbf)
 glimpse(im)
 ```
-
 
 ---
 
@@ -46,17 +46,6 @@ Temas: Insegurança alimentar e nutricional; Inclusão produtiva rural; Acesso �
 *MACRO DESAFIO*: Promoção de Sistemas Alimentares Saudáveis e Sustentáveis Desafios: o conjunto dos desafios 3, 4 e 5 contemplam este macro desafio.
 
 
-```{r}
-consumo <- read_rds("data/consumo/consumo.rds")
-glimpse(consumo)
-```
-
-
-```{r}
-estado_nutricional <- read_rds("data/df_final.rds")
-glimpse(estado_nutricional)
-```
-
 
 ---
 
@@ -65,15 +54,15 @@ glimpse(estado_nutricional)
 Temas: Fortalecimento da agricultura familiar; Reforma agrária; Transição agroecológica; Mulheres; Juventude; Sementes; Mudanças climáticas.
 
 3.1 Produção de alimentos  
-3.2 Área Plantada  
+3.2 Área Plantada  **(OK)**  
 3.2.1 Área Plantada Agricultura Familiar  
 3.2.2 Área Plantada Agricultura não familiar  
-3.3. Rendimento Médio  
-3.4 Proporção Área Colhida  
-3.5 Proporção Valor da Produção  
+3.3. Rendimento Médio  **(OK)**  
+3.4 Proporção Área Colhida  **(OK)**  
+3.5 Proporção Valor da Produção  **(OK)**  
 
 ```{r}
-lavoura_permanente <- read_rds("data/permanente.rds")
+lavoura_permanente <- read_rds("data/permanente.rds") 
 glimpse(lavoura_permanente)
 ```
 
@@ -89,10 +78,10 @@ glimpse(lavoura_temporaria)
 Temas: Compras públicas; Abastecimento; Legislação sanitária; Economia solidaria; Perdas e desperdícios de alimentos; Equipamentos públicos de SAN; Agricultura urbana.
 
 **4.1 Programa da Alimentação Escolar**  
-4.1.1 Número de Alunos Beneficiários  
+4.1.1 Número de Alunos Beneficiários  **(OK)**  
 4.1.2 Valor gasto com Compras da Agricultura Familiar 30%  
 4.1.3 Valor Formalizado   
-4.1.4 Valor Executado  
+4.1.4 Valor Executado  **(OK)**  
 
 ```{r}
 pnae_alunos <- read_rds("data/pnae_alunos_atendidos.rds")
@@ -117,14 +106,14 @@ glimpse(pnae_conselho)
 ```
 
 **4.2 Banco de Leite **  
-4.2.1 Próprio  
-4.2.2 Terceirizado  
+4.2.1 Próprio  **(OK)**  
+4.2.2 Terceirizado  **(OK)**  
 **4.3 Serviço Lactário**  
-4.3.1 Próprio  
-4.3.2 Terceirizado  
-**4.4 Serviço Nutrição**  
-4.4.1 Próprio  
-4.4.2 Terceirizado  
+4.3.1 Próprio  **(OK)**  
+4.3.2 Terceirizado  **(OK)**  
+**4.4 Serviço Nutrição**    
+4.4.1 Próprio  **(OK)**  
+4.4.2 Terceirizado **(OK)**   
 
 
 ```{r}
@@ -138,6 +127,8 @@ glimpse(sisvan_estab)
 **DESAFIO 5**. Promover e proteger a alimentação adequada e saudável da população brasileira, com estratégias de educação alimentar e nutricional e medidas regulatórias
 
 Temas: Promoção da alimentação saudável; Promoção da alimentação saudável no ambiente escolar; Ações regulatórias; Controle dos riscos relacionados ao consumo de alimentos e a exposição ao uso de agrotóxicos.
+
+
 
 ---
 
@@ -173,14 +164,27 @@ Temas: Desnutrição; excesso de peso e obesidade; doenças e agravos relacionad
  6.26 Valores de IMC por idade gestacional entre a curva inferior e a segunda curva: gestante com peso adequado (eutrófica).  
  6.27 Valores de IMC por idade gestacional entre a segunda curva e a curva superior: gestante com sobrepeso.  
  6.28 Valores de IMC por idade gestacional acima da curva superior: gestante com obesidade  
+
+
+
+```{r}
+estado_nutricional <- read_rds("data/df_final.rds")
+glimpse(estado_nutricional)
+```
+
+
 7. Consumo   
-7.1 Consumo de ultra processados  
-7.1.2 Consumo embutidos  
-7.1.3 Consumo processados  
+7.1 Consumo de ultra processados **(OK)** 
+7.1.2 Consumo embutidos  **(OK)**
+7.1.3 Consumo processados  **(OK)**
+
+```{r}
+consumo <- read_rds("data/consumo/consumo.rds")
+glimpse(consumo)
+```
+
 
 ---
-
-
 
 **DESAFIO 7**.  Ampliar a disponibilidade hídrica e o acesso à água para a população, em especial a população pobre no meio rural
 

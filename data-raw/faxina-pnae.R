@@ -2,7 +2,7 @@ library(tidyverse)
 
 
 # Recursos repassados
-pnae <- read_rds("data-raw/pnae/pnae.rds") %>%
+pnae <- read_rds("data-raw/pnae.rds") %>%
   janitor::clean_names() %>%
   mutate(
     municipio = str_replace_all(municipio,
@@ -42,7 +42,7 @@ glimpse(pnae_recurso)
 write_rds(pnae_recurso,"data/pnae_recurso.rds")
 
 # Escolas Atendidas pelo PNAE
-escolas <- read_csv("data-raw/pnae/EscolasAtendidas.csv") %>%
+escolas <- read_csv("data-raw/EscolasAtendidas.csv") %>%
   janitor::clean_names() %>%
   mutate(
     municipio = str_replace_all(municipio,
@@ -69,7 +69,7 @@ glimpse(pnae_escolas)
 write_rds(pnae_escolas,"data/pnae_escolas.rds")
 
 # Conselho de Alimentação Escolar
-ConselhoAlimentacaoEscolar <- read_csv("data-raw/pnae/ConselhoAlimentacaoEscolar.csv") %>%
+ConselhoAlimentacaoEscolar <- read_csv("data-raw/ConselhoAlimentacaoEscolar.csv") %>%
   janitor::clean_names() %>%
   mutate(
     municipio = str_replace_all(municipio,
@@ -96,7 +96,7 @@ glimpse(pnae_conselho_alim_esco)
 write_rds(pnae_conselho_alim_esco,"data/pnae_conselho_alim_esco.rds")
 
 # Alunos atendidos pelo PNAE - 2022
-alunos <- read_csv("data-raw/pnae/Alunos_Atendidos.csv") %>%
+alunos <- read_csv("data-raw/Alunos_Atendidos.csv") %>%
   janitor::clean_names() %>%
   mutate(
     municipio = str_replace_all(municipio,
