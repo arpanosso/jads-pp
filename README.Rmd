@@ -34,7 +34,12 @@ Temas: Transferência de Renda; Alimentação escolar; Distribuição de aliment
 ```{r}
 im <- read_rds("data/im.rds") %>% 
   select(nome,id_municipio:valor_pago_pbf)
-glimpse(im)
+data_set <- im %>% 
+  group_by(nome, id_municipio, ano) %>% 
+  summarise(familias_beneficiarias_pbf=trunc(mean(familias_beneficiarias_pbf,na.rm=TRUE)),
+            pessoas_beneficiarias_pbf=trunc(mean(pessoas_beneficiarias_pbf,na.rm=TRUE)),
+            valor_pago_pbf=mean(valor_pago_pbf,na.rm=TRUE))
+glimpse(data_set)
 ```
 
 ---
@@ -63,12 +68,39 @@ Temas: Fortalecimento da agricultura familiar; Reforma agrária; Transição agr
 
 ```{r}
 lavoura_permanente <- read_rds("data/permanente.rds") 
-glimpse(lavoura_permanente)
+lavoura_temporaria <- read_rds("data/temporaria.rds")
+lavouras <- rbind(lavoura_permanente %>% 
+        mutate(tipo = "permanente"),
+      lavoura_temporaria %>% 
+        mutate(tipo = "temporaria")
+      )
+my_na_count <- function(x) sum(is.na(x))
+
+lavouras$na <- apply(lavouras[5:12],1,my_na_count)
+lavouras %>% 
+  filter(na !=8, ano >= 2010) %>% 
+  arrange(ano) %>% 
+  relocate(tipo) %>% 
+  group_by(tipo,produto) %>% 
+  summarise(pvp = sum(prop_valor_producao,na.rm = TRUE)) %>% 
+  mutate(produto = fct_reorder(produto, pvp)) %>% 
+  ggplot(aes(x=pvp,y=produto,fill=tipo)) +
+  geom_col(color="black")+
+  facet_wrap(~tipo,scales = "free") + 
+  theme_bw()
 ```
 
+
 ```{r}
-lavoura_temporaria <- read_rds("data/temporaria.rds")
-glimpse(lavoura_temporaria)
+glimpse(lavouras)
+glimpse(data_set)
+data_set<-left_join(lavouras %>% 
+            filter(na != 8, ano >= 2010) %>% 
+            select(-na),
+          data_set, by = c("ano","id_municipio","nome")
+          )
+
+glimpse(data_set)
 ```
 
 ---
@@ -86,24 +118,51 @@ Temas: Compras públicas; Abastecimento; Legislação sanitária; Economia solid
 ```{r}
 pnae_alunos <- read_rds("data/pnae_alunos_atendidos.rds")
 glimpse(pnae_alunos)
+lista_etapas <- pnae_alunos$etapa_ensino %>% unique()
+```
+```{r}
+pnae_recurso <- read_rds("data/pnae_recurso.rds") 
+pnae_recurso <-  pnae_recurso %>% 
+  mutate(modalidade_ensino = ifelse(modalidade_ensino == "EJA",
+                                    "EDUCAÇÃO DE JOVENS E ADULTOS (EJA)",
+                                    modalidade_ensino))
+# pnae_recurso$modalidade_ensino %>% unique()
 ```
 
 
 ```{r}
-pnae_recurso <- read_rds("data/pnae_recurso.rds")
-glimpse(pnae_recurso)
-```
+pnae_recurso <- pnae_recurso %>% 
+  group_by(nome, ano, esfera_governo, modalidade_ensino) %>% 
+  summarise(vl_total_escolas = mean(vl_total_escolas)) %>% 
+  rename(etapa_ensino = modalidade_ensino) %>% 
+  filter(etapa_ensino %in% lista_etapas)
 
+ 
+pnae <- left_join(pnae_alunos %>% 
+          select(ano:qt_alunos_pnae,nome),
+        pnae_recurso,
+        by =c("nome","ano","esfera_governo","etapa_ensino")
+        )
+# glimpse(pnae)
+```
 
 ```{r}
-pnae_escola <- read_rds("data/pnae_escolas.rds")
-glimpse(pnae_escola)
+# pnae_escola <- read_rds("data/pnae_escolas.rds")
+# pnae_conselho <- read_rds("data/pnae_conselho_alim_esco.rds")
 ```
 
 ```{r}
-pnae_conselho <- read_rds("data/pnae_conselho_alim_esco.rds")
-glimpse(pnae_conselho)
+pnae <- pnae %>% 
+  filter(ano >=2010 & ano <= 2019)
+data_set <- left_join(data_set, pnae %>% 
+            drop_na() %>% 
+            group_by(ano, nome) %>% 
+            summarise(qt_alunos_pnae = sum(qt_alunos_pnae,na.rm=TRUE),
+                      vl_total_escolas = sum(vl_total_escolas,na.rm=TRUE)
+                      ), 
+          by=c("ano","nome"))
 ```
+
 
 **4.2 Banco de Leite **  
 4.2.1 Próprio  **(OK)**  
@@ -118,7 +177,20 @@ glimpse(pnae_conselho)
 
 ```{r}
 sisvan_estab <- read_rds("data/sisvan_estab.rds")
-glimpse(sisvan_estab)
+sisvan <- sisvan_estab %>% 
+  group_by(municipio, ano) %>% 
+  summarise(
+    servico_nutricao_proprio= sum(indicador_servico_nutricao_proprio),
+    servico_nutricao_terceirizado = sum(indicador_servico_nutricao_terceirizado),
+    servico_lactario_proprio= sum(indicador_servico_lactario_proprio),                         
+    servico_lactario_terceirizado= sum(indicador_servico_lactario_terceirizado),                    servico_banco_leite_proprio= sum(indicador_servico_banco_leite_proprio),                        servico_banco_leite_terceirizado= sum(indicador_servico_banco_leite_terceirizado),
+    total = trunc(n()/12)
+  )
+```
+
+
+```{r}
+data_set %>%  glimpse()
 ```
 
 

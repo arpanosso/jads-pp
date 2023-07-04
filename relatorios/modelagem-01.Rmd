@@ -45,8 +45,6 @@ sisvan_estab %>%
 ```
 
 
-
-
 ## Nutrição
 
 ```{r}
