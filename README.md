@@ -24,21 +24,20 @@ alimentos.
 ``` r
 im <- read_rds("data/im.rds") %>% 
   select(nome,id_municipio:valor_pago_pbf)
-data_set <- im %>% 
-  group_by(nome, id_municipio, ano) %>% 
-  summarise(familias_beneficiarias_pbf=trunc(mean(familias_beneficiarias_pbf,na.rm=TRUE)),
-            pessoas_beneficiarias_pbf=trunc(mean(pessoas_beneficiarias_pbf,na.rm=TRUE)),
-            valor_pago_pbf=mean(valor_pago_pbf,na.rm=TRUE))
+data_set <- im %>% filter(ano >= 2010) %>% 
+  group_by(nome, ano) %>% 
+  summarise(familias_beneficiarias_pbf=sum(familias_beneficiarias_pbf,na.rm=TRUE)/12,
+            pessoas_beneficiarias_pbf=sum(pessoas_beneficiarias_pbf,na.rm=TRUE)/12,
+            valor_pago_pbf=sum(valor_pago_pbf,na.rm=TRUE))
 glimpse(data_set)
-#> Rows: 10,965
-#> Columns: 6
-#> Groups: nome, id_municipio [645]
+#> Rows: 7,095
+#> Columns: 5
+#> Groups: nome [645]
 #> $ nome                       <chr> "Adamantina", "Adamantina", "Adamantina", "~
-#> $ id_municipio               <chr> "3500105", "3500105", "3500105", "3500105",~
-#> $ ano                        <int> 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2~
-#> $ familias_beneficiarias_pbf <dbl> 464, 1074, 1520, 1437, 1197, 931, 623, 593,~
-#> $ pessoas_beneficiarias_pbf  <dbl> NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN~
-#> $ valor_pago_pbf             <dbl> 27037.083, 59070.583, 68851.667, 70932.417,~
+#> $ ano                        <int> 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2~
+#> $ familias_beneficiarias_pbf <dbl> 623.0000, 593.5833, 600.5833, 597.0000, 475~
+#> $ pessoas_beneficiarias_pbf  <dbl> 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0~
+#> $ valor_pago_pbf             <dbl> 564177, 683102, 820970, 871484, 742443, 689~
 ```
 
 ------------------------------------------------------------------------
@@ -83,7 +82,6 @@ lavouras <- rbind(lavoura_permanente %>%
         mutate(tipo = "temporaria")
       )
 my_na_count <- function(x) sum(is.na(x))
-
 lavouras$na <- apply(lavouras[5:12],1,my_na_count)
 lavouras %>% 
   filter(na !=8, ano >= 2010) %>% 
@@ -101,60 +99,30 @@ lavouras %>%
 ![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
-glimpse(lavouras)
-#> Rows: 2,089,780
-#> Columns: 15
-#> $ ano                  <int> 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1976, 1~
-#> $ sigla_uf             <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "SP", "~
-#> $ id_municipio         <chr> "3500105", "3500105", "3500105", "3500204", "3500~
-#> $ produto              <chr> "Coco-da-baía", "Erva-mate (folha verde)", "Tange~
-#> $ area_plantada        <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N~
-#> $ area_colhida         <int> NA, NA, NA, NA, NA, NA, NA, NA, 877, NA, NA, NA, ~
-#> $ quantidade_produzida <int> NA, NA, NA, NA, NA, NA, NA, NA, 712, NA, NA, NA, ~
-#> $ rendimento_medio     <int> NA, NA, NA, NA, NA, NA, NA, NA, 812, NA, NA, NA, ~
-#> $ valor_producao       <int> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N~
-#> $ prop_area_plantada   <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N~
-#> $ prop_area_colhida    <dbl> NA, NA, NA, NA, NA, NA, NA, NA, 96.16, NA, NA, NA~
-#> $ prop_valor_producao  <dbl> NA, NA, NA, NA, NA, NA, NA, NA, 94.56, NA, NA, NA~
-#> $ nome                 <chr> "Adamantina", "Adamantina", "Adamantina", "Adolfo~
-#> $ tipo                 <chr> "permanente", "permanente", "permanente", "perman~
-#> $ na                   <int> 8, 8, 8, 8, 8, 8, 8, 8, 3, 8, 8, 8, 8, 8, 8, 8, 8~
-glimpse(data_set)
-#> Rows: 10,965
-#> Columns: 6
-#> Groups: nome, id_municipio [645]
-#> $ nome                       <chr> "Adamantina", "Adamantina", "Adamantina", "~
-#> $ id_municipio               <chr> "3500105", "3500105", "3500105", "3500105",~
-#> $ ano                        <int> 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2~
-#> $ familias_beneficiarias_pbf <dbl> 464, 1074, 1520, 1437, 1197, 931, 623, 593,~
-#> $ pessoas_beneficiarias_pbf  <dbl> NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN~
-#> $ valor_pago_pbf             <dbl> 27037.083, 59070.583, 68851.667, 70932.417,~
-data_set<-left_join(lavouras %>% 
-            filter(na != 8, ano >= 2010) %>% 
-            select(-na),
-          data_set, by = c("ano","id_municipio","nome")
-          )
+# Precisamos resumir lavouras
+lavouras <- lavouras %>% 
+            filter(na != 8, ano >= 2010,
+                   produto != "Café (em grão) Arábica",
+                   produto != "Café (em grão) Canephora") %>% 
+  select(-na)
+lavouras <- lavouras %>% 
+  group_by(tipo, ano, nome) %>% 
+  summarise(
+    n_produtos = n(),
+    area_plantada = sum(area_plantada,na.rm=TRUE),
+    rendimento_medio = mean(rendimento_medio,na.rm=TRUE),
+    prop_area_colhida = mean(prop_area_colhida,na.rm=TRUE) ,
+    prop_valor_producao = mean(prop_valor_producao,na.rm=TRUE)
+    
+  ) %>% 
+  pivot_wider(names_from = tipo,
+              values_from = n_produtos:prop_valor_producao)
 
-glimpse(data_set)
-#> Rows: 60,722
-#> Columns: 17
-#> $ ano                        <int> 2016, 2016, 2016, 2016, 2016, 2016, 2016, 2~
-#> $ sigla_uf                   <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "~
-#> $ id_municipio               <chr> "3500303", "3500303", "3500402", "3500402",~
-#> $ produto                    <chr> "Café (em grão) Total", "Café (em grão) Ará~
-#> $ area_plantada              <int> 530, 530, 1100, 21, 4045, 12, 4, 895, 10, 4~
-#> $ area_colhida               <int> 530, 530, 1100, 21, 4045, 12, 4, 895, 10, 4~
-#> $ quantidade_produzida       <int> 954, 954, 1832, 652, 121176, 504, 48, 2327,~
-#> $ rendimento_medio           <int> 1800, 1800, 1665, 31048, 29957, 42000, 1200~
-#> $ valor_producao             <int> 7530, 7530, 14652, 506, 45683, 762, 96, 930~
-#> $ prop_area_plantada         <dbl> 6.25, 6.25, 97.52, 1.86, 89.00, 4.67, 0.26,~
-#> $ prop_area_colhida          <dbl> 6.25, 6.25, 97.52, 1.86, 89.00, 4.67, 0.26,~
-#> $ prop_valor_producao        <dbl> 4.99, 4.99, 95.37, 3.29, 96.12, 13.87, 0.87~
-#> $ nome                       <chr> "Aguaí", "Aguaí", "Águas da Prata", "Águas ~
-#> $ tipo                       <chr> "permanente", "permanente", "permanente", "~
-#> $ familias_beneficiarias_pbf <dbl> 1538, 1538, 144, 144, 164, 173, 226, 158, 5~
-#> $ pessoas_beneficiarias_pbf  <dbl> NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN~
-#> $ valor_pago_pbf             <dbl> 208320.50, 208320.50, 21848.67, 21848.67, 2~
+data_set <- left_join(
+  data_set,
+  lavouras,
+  by = c("ano","nome")
+)
 ```
 
 ------------------------------------------------------------------------
@@ -243,8 +211,6 @@ pnae <- left_join(pnae_alunos %>%
 ```
 
 ``` r
-pnae <- pnae %>% 
-  filter(ano >=2010 & ano <= 2019)
 data_set <- left_join(data_set, pnae %>% 
             drop_na() %>% 
             group_by(ano, nome) %>% 
@@ -273,33 +239,68 @@ sisvan <- sisvan_estab %>%
     servico_nutricao_terceirizado = sum(indicador_servico_nutricao_terceirizado),
     servico_lactario_proprio= sum(indicador_servico_lactario_proprio),                         
     servico_lactario_terceirizado= sum(indicador_servico_lactario_terceirizado),                    servico_banco_leite_proprio= sum(indicador_servico_banco_leite_proprio),                        servico_banco_leite_terceirizado= sum(indicador_servico_banco_leite_terceirizado),
-    total = trunc(n()/12)
-  )
+    # total = trunc(n()/12)
+  ) %>% mutate(nome = municipio)
 ```
 
 ``` r
 data_set %>%  glimpse()
-#> Rows: 60,722
-#> Columns: 19
-#> $ ano                        <dbl> 2016, 2016, 2016, 2016, 2016, 2016, 2016, 2~
-#> $ sigla_uf                   <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "~
-#> $ id_municipio               <chr> "3500303", "3500303", "3500402", "3500402",~
-#> $ produto                    <chr> "Café (em grão) Total", "Café (em grão) Ará~
-#> $ area_plantada              <int> 530, 530, 1100, 21, 4045, 12, 4, 895, 10, 4~
-#> $ area_colhida               <int> 530, 530, 1100, 21, 4045, 12, 4, 895, 10, 4~
-#> $ quantidade_produzida       <int> 954, 954, 1832, 652, 121176, 504, 48, 2327,~
-#> $ rendimento_medio           <int> 1800, 1800, 1665, 31048, 29957, 42000, 1200~
-#> $ valor_producao             <int> 7530, 7530, 14652, 506, 45683, 762, 96, 930~
-#> $ prop_area_plantada         <dbl> 6.25, 6.25, 97.52, 1.86, 89.00, 4.67, 0.26,~
-#> $ prop_area_colhida          <dbl> 6.25, 6.25, 97.52, 1.86, 89.00, 4.67, 0.26,~
-#> $ prop_valor_producao        <dbl> 4.99, 4.99, 95.37, 3.29, 96.12, 13.87, 0.87~
-#> $ nome                       <chr> "Aguaí", "Aguaí", "Águas da Prata", "Águas ~
-#> $ tipo                       <chr> "permanente", "permanente", "permanente", "~
-#> $ familias_beneficiarias_pbf <dbl> 1538, 1538, 144, 144, 164, 173, 226, 158, 5~
-#> $ pessoas_beneficiarias_pbf  <dbl> NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN~
-#> $ valor_pago_pbf             <dbl> 208320.50, 208320.50, 21848.67, 21848.67, 2~
-#> $ qt_alunos_pnae             <dbl> 4158, 4158, 650, 650, 470, 358, 451, 475, 5~
-#> $ vl_total_escolas           <dbl> 521800, 521800, 15504, 15504, 59900, 41600,~
+#> Rows: 7,095
+#> Columns: 17
+#> Groups: nome [645]
+#> $ nome                           <chr> "Adamantina", "Adamantina", "Adamantina~
+#> $ ano                            <dbl> 2010, 2011, 2012, 2013, 2014, 2015, 201~
+#> $ familias_beneficiarias_pbf     <dbl> 623.0000, 593.5833, 600.5833, 597.0000,~
+#> $ pessoas_beneficiarias_pbf      <dbl> 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,~
+#> $ valor_pago_pbf                 <dbl> 564177, 683102, 820970, 871484, 742443,~
+#> $ n_produtos_permanente          <int> 13, 13, 8, 8, 9, 9, 8, 7, 8, 7, NA, 8, ~
+#> $ n_produtos_temporaria          <int> 7, 8, 8, 8, 8, 7, 8, 8, 7, 7, NA, 9, 9,~
+#> $ area_plantada_permanente       <int> 931, 925, 918, 878, 883, 873, 862, 862,~
+#> $ area_plantada_temporaria       <int> 14946, 14480, 14382, 14284, 13419, 1388~
+#> $ rendimento_medio_permanente    <dbl> 17445.31, 15640.31, 13261.38, 13636.38,~
+#> $ rendimento_medio_temporaria    <dbl> 24549.14, 28561.12, 19216.71, 28291.38,~
+#> $ prop_area_colhida_permanente   <dbl> 7.693846, 7.691538, 12.500000, 12.50125~
+#> $ prop_area_colhida_temporaria   <dbl> 14.28429, 12.50000, 12.50125, 12.49875,~
+#> $ prop_valor_producao_permanente <dbl> 7.692308, 7.692308, 12.501250, 12.50000~
+#> $ prop_valor_producao_temporaria <dbl> 14.28571, 12.49875, 12.49875, 12.49750,~
+#> $ qt_alunos_pnae                 <dbl> 2904, 2738, 2614, 2810, 2745, 2705, 259~
+#> $ vl_total_escolas               <dbl> 299280.00, 296700.00, 318288.00, 363100~
+sisvan %>%  glimpse()
+#> Rows: 10,965
+#> Columns: 9
+#> Groups: municipio [645]
+#> $ municipio                        <chr> "Adamantina", "Adamantina", "Adamanti~
+#> $ ano                              <dbl> 2006, 2007, 2008, 2009, 2010, 2011, 2~
+#> $ servico_nutricao_proprio         <int> 24, 24, 24, 24, 24, 24, 24, 24, 24, 4~
+#> $ servico_nutricao_terceirizado    <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0~
+#> $ servico_lactario_proprio         <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0~
+#> $ servico_lactario_terceirizado    <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0~
+#> $ servico_banco_leite_proprio      <int> 0, 0, 0, 0, 9, 12, 12, 12, 23, 24, 24~
+#> $ servico_banco_leite_terceirizado <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0~
+#> $ nome                             <chr> "Adamantina", "Adamantina", "Adamanti~
+data_set <- left_join(data_set, sisvan, by = c("ano","nome"))
+data_set
+#> # A tibble: 7,095 x 24
+#> # Groups:   nome [645]
+#>    nome         ano familias_beneficiari~1 pessoas_beneficiaria~2 valor_pago_pbf
+#>    <chr>      <dbl>                  <dbl>                  <dbl>          <dbl>
+#>  1 Adamantina  2010                   623                      0          564177
+#>  2 Adamantina  2011                   594.                     0          683102
+#>  3 Adamantina  2012                   601.                     0          820970
+#>  4 Adamantina  2013                   597                      0          871484
+#>  5 Adamantina  2014                   475.                     0          742443
+#>  6 Adamantina  2015                   421.                     0          689508
+#>  7 Adamantina  2016                   368.                     0          579115
+#>  8 Adamantina  2017                   302.                     0          440561
+#>  9 Adamantina  2018                   285.                   944.         424297
+#> 10 Adamantina  2019                   282.                   876.         421973
+#> # i 7,085 more rows
+#> # i abbreviated names: 1: familias_beneficiarias_pbf,
+#> #   2: pessoas_beneficiarias_pbf
+#> # i 19 more variables: n_produtos_permanente <int>,
+#> #   n_produtos_temporaria <int>, area_plantada_permanente <int>,
+#> #   area_plantada_temporaria <int>, rendimento_medio_permanente <dbl>,
+#> #   rendimento_medio_temporaria <dbl>, prop_area_colhida_permanente <dbl>, ...
 ```
 
 ------------------------------------------------------------------------
@@ -373,23 +374,20 @@ curva superior: gestante com sobrepeso.
 gestante com obesidade
 
 ``` r
-estado_nutricional <- read_rds("data/df_final.rds")
-glimpse(estado_nutricional)
-#> Rows: 541,800
-#> Columns: 13
-#> $ ano          <dbl> 2008, 2008, 2008, 2008, 2008, 2008, 2008, 2008, 2008, 200~
-#> $ fase_da_vida <chr> "Criança", "Criança", "Criança", "Criança", "Criança", "C~
-#> $ idade        <chr> "0-4", "0-4", "0-4", "0-4", "0-4", "0-4", "0-4", "0-4", "~
-#> $ indice       <chr> "Peso X Idade", "Peso X Idade", "Peso X Idade", "Peso X I~
-#> $ indice_cri   <chr> "Peso X Idade", "Peso X Idade", "Peso X Idade", "Peso X I~
-#> $ indice_ado   <chr> "Altura X Idade", "Altura X Idade", "Altura X Idade", "Al~
-#> $ regiao       <chr> "SUDESTE", "SUDESTE", "SUDESTE", "SUDESTE", "SUDESTE", "S~
-#> $ codigo_uf    <chr> "35", "35", "35", "35", "35", "35", "35", "35", "35", "35~
-#> $ uf           <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "SP", "SP", "SP~
-#> $ id_municipio <chr> "350010", "350010", "350010", "350010", "350020", "350020~
-#> $ municipio    <chr> "Adamantina", "Adamantina", "Adamantina", "Adamantina", "~
-#> $ classe       <chr> "muito_baixo", "baixo", "adequado", "elevado", "muito_bai~
-#> $ valor        <dbl> 4, 4, 543, 48, 0, 0, 19, 1, 4, 2, 162, 16, 0, 1, 71, 2, 0~
+estado_nutricional <- read_rds("data/df_final.rds") %>% 
+  group_by(ano,fase_da_vida,idade,indice,municipio) %>% 
+  mutate(valor_p = valor/sum(valor)*100) %>% 
+  ungroup()
+df_nome <- read_rds("data/df_nome.rds")
+estado_nutricional <- left_join(estado_nutricional, 
+                                df_nome %>% select(nome, id_municipio_6) %>% 
+                       rename(id_municipio  = id_municipio_6),
+                     by = c("id_municipio")) %>% 
+  select(-regiao,-uf,-codigo_uf,-id_municipio,-municipio,-indice_cri,
+         -indice_ado,-valor) %>% relocate(ano,nome) %>% 
+  pivot_wider(names_from = c(fase_da_vida,idade,indice,classe),
+              values_from = c(valor_p)) %>% 
+  janitor::clean_names()
 ```
 
 7.  Consumo  
@@ -398,19 +396,122 @@ glimpse(estado_nutricional)
 
 ``` r
 consumo <- read_rds("data/consumo/consumo.rds")
-glimpse(consumo)
-#> Rows: 63,004
-#> Columns: 10
-#> $ faixa_etaria   <chr> "2-anos-ou-mais", "2-anos-ou-mais", "2-anos-ou-mais", "~
-#> $ fase_da_vida   <chr> "adolecentes", "adolecentes", "adolecentes", "adolecent~
-#> $ tipo_relatorio <chr> "CONS_3REFEICOES", "CONS_3REFEICOES", "CONS_3REFEICOES"~
-#> $ ano            <int> 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2~
-#> $ uf             <chr> "SP", "SP", "SP", "SP", "SP", "SP", "SP", "SP", "SP", "~
-#> $ codigo_ibge    <dbl> 350010, 350030, 350055, 350080, 350100, 350110, 350140,~
-#> $ municipio      <chr> "ADAMANTINA", "AGUAÍ", "ÁGUAS DE SANTA BÁRBARA", "ALFRE~
-#> $ total          <dbl> 5, 3, 0, 21, 4, 1, 0, 33, 10, 0, 1, 133, 92, 38, 1, 1, ~
-#> $ percent        <dbl> 0.8333333, 0.7500000, 0.0000000, 0.6000000, 0.8000000, ~
-#> $ monitorados    <dbl> 6, 4, 1, 35, 5, 1, 46, 47, 46, 11, 1, 161, 145, 48, 1, ~
+consumo <- left_join(consumo, df_nome %>% select(nome, id_municipio_6) %>% 
+                       rename(codigo_ibge = id_municipio_6) %>%
+                       mutate(codigo_ibge = as.numeric(codigo_ibge)),
+                     by = c("codigo_ibge"))
+
+tipos_relat <- c("CONS_ULTRA","CONS_EMBUT")
+consumo <- consumo %>% select(-faixa_etaria, -codigo_ibge, -municipio,
+                   -uf, -total, -monitorados) %>% 
+  filter(tipo_relatorio %in% tipos_relat,
+         fase_da_vida != "entre-6-meses-23-meses")
+
+consumo <- consumo %>% 
+  pivot_wider(names_from = c(fase_da_vida,tipo_relatorio),
+              values_from = percent) %>% 
+  janitor::clean_names()
+```
+
+``` r
+consumo_estado_nutricional <- left_join(consumo, estado_nutricional,
+          by=c("ano","nome"))
+data_set <- left_join(data_set,consumo_estado_nutricional,
+          by=c("ano","nome")) %>% 
+  select(-municipio)
+glimpse(data_set)
+#> Rows: 7,095
+#> Columns: 89
+#> Groups: nome [645]
+#> $ nome                                         <chr> "Adamantina", "Adamantina~
+#> $ ano                                          <dbl> 2010, 2011, 2012, 2013, 2~
+#> $ familias_beneficiarias_pbf                   <dbl> 623.0000, 593.5833, 600.5~
+#> $ pessoas_beneficiarias_pbf                    <dbl> 0.0000, 0.0000, 0.0000, 0~
+#> $ valor_pago_pbf                               <dbl> 564177, 683102, 820970, 8~
+#> $ n_produtos_permanente                        <int> 13, 13, 8, 8, 9, 9, 8, 7,~
+#> $ n_produtos_temporaria                        <int> 7, 8, 8, 8, 8, 7, 8, 8, 7~
+#> $ area_plantada_permanente                     <int> 931, 925, 918, 878, 883, ~
+#> $ area_plantada_temporaria                     <int> 14946, 14480, 14382, 1428~
+#> $ rendimento_medio_permanente                  <dbl> 17445.31, 15640.31, 13261~
+#> $ rendimento_medio_temporaria                  <dbl> 24549.14, 28561.12, 19216~
+#> $ prop_area_colhida_permanente                 <dbl> 7.693846, 7.691538, 12.50~
+#> $ prop_area_colhida_temporaria                 <dbl> 14.28429, 12.50000, 12.50~
+#> $ prop_valor_producao_permanente               <dbl> 7.692308, 7.692308, 12.50~
+#> $ prop_valor_producao_temporaria               <dbl> 14.28571, 12.49875, 12.49~
+#> $ qt_alunos_pnae                               <dbl> 2904, 2738, 2614, 2810, 2~
+#> $ vl_total_escolas                             <dbl> 299280.00, 296700.00, 318~
+#> $ servico_nutricao_proprio                     <int> 24, 24, 24, 24, 24, 44, 4~
+#> $ servico_nutricao_terceirizado                <int> 0, 0, 0, 0, 0, 0, 0, 0, 0~
+#> $ servico_lactario_proprio                     <int> 0, 0, 0, 0, 0, 0, 0, 0, 0~
+#> $ servico_lactario_terceirizado                <int> 0, 0, 0, 0, 0, 0, 0, 0, 0~
+#> $ servico_banco_leite_proprio                  <int> 9, 12, 12, 12, 23, 24, 24~
+#> $ servico_banco_leite_terceirizado             <int> 0, 0, 0, 0, 0, 0, 0, 0, 0~
+#> $ adolecentes_cons_embut                       <dbl> NA, NA, NA, NA, NA, 0.333~
+#> $ adolecentes_cons_ultra                       <dbl> NA, NA, NA, NA, NA, 1.000~
+#> $ adultos_cons_embut                           <dbl> NA, NA, NA, NA, NA, 0.388~
+#> $ adultos_cons_ultra                           <dbl> NA, NA, NA, NA, NA, 0.805~
+#> $ criancas_2_4_cons_embut                      <dbl> NA, NA, NA, NA, NA, 0.318~
+#> $ criancas_2_4_cons_ultra                      <dbl> NA, NA, NA, NA, NA, 0.772~
+#> $ criancas_5_9_cons_embut                      <dbl> NA, NA, NA, NA, NA, 0.166~
+#> $ criancas_5_9_cons_ultra                      <dbl> NA, NA, NA, NA, NA, 0.75,~
+#> $ idosos_cons_embut                            <dbl> NA, NA, NA, NA, NA, 0.666~
+#> $ idosos_cons_ultra                            <dbl> NA, NA, NA, NA, NA, 0.666~
+#> $ crianca_0_4_peso_x_idade_muito_baixo         <dbl> NA, NA, NA, NA, NA, 1.197~
+#> $ crianca_0_4_peso_x_idade_baixo               <dbl> NA, NA, NA, NA, NA, 2.670~
+#> $ crianca_0_4_peso_x_idade_adequado            <dbl> NA, NA, NA, NA, NA, 88.39~
+#> $ crianca_0_4_peso_x_idade_elevado             <dbl> NA, NA, NA, NA, NA, 7.734~
+#> $ crianca_5_10_peso_x_idade_muito_baixo        <dbl> NA, NA, NA, NA, NA, 1.060~
+#> $ crianca_5_10_peso_x_idade_baixo              <dbl> NA, NA, NA, NA, NA, 2.226~
+#> $ crianca_5_10_peso_x_idade_adequado           <dbl> NA, NA, NA, NA, NA, 81.23~
+#> $ crianca_5_10_peso_x_idade_elevado            <dbl> NA, NA, NA, NA, NA, 15.48~
+#> $ crianca_0_4_peso_x_altura_magreza_acentuada  <dbl> NA, NA, NA, NA, NA, 0.644~
+#> $ crianca_0_4_peso_x_altura_magreza            <dbl> NA, NA, NA, NA, NA, 1.933~
+#> $ crianca_0_4_peso_x_altura_adequado           <dbl> NA, NA, NA, NA, NA, 66.85~
+#> $ crianca_0_4_peso_x_altura_risco_sobrepeso    <dbl> NA, NA, NA, NA, NA, 18.60~
+#> $ crianca_0_4_peso_x_altura_sobrepeso          <dbl> NA, NA, NA, NA, NA, 6.445~
+#> $ crianca_0_4_peso_x_altura_obesidade          <dbl> NA, NA, NA, NA, NA, 5.524~
+#> $ crianca_5_10_peso_x_altura_magreza_acentuada <dbl> NA, NA, NA, NA, NA, 0.000~
+#> $ crianca_5_10_peso_x_altura_magreza           <dbl> NA, NA, NA, NA, NA, 0.000~
+#> $ crianca_5_10_peso_x_altura_adequado          <dbl> NA, NA, NA, NA, NA, 81.25~
+#> $ crianca_5_10_peso_x_altura_risco_sobrepeso   <dbl> NA, NA, NA, NA, NA, 6.250~
+#> $ crianca_5_10_peso_x_altura_sobrepeso         <dbl> NA, NA, NA, NA, NA, 6.250~
+#> $ crianca_5_10_peso_x_altura_obesidade         <dbl> NA, NA, NA, NA, NA, 6.250~
+#> $ crianca_0_4_altura_x_idade_muito_baixa       <dbl> NA, NA, NA, NA, NA, 3.683~
+#> $ crianca_0_4_altura_x_idade_baixa             <dbl> NA, NA, NA, NA, NA, 6.169~
+#> $ crianca_0_4_altura_x_idade_adequada          <dbl> NA, NA, NA, NA, NA, 90.14~
+#> $ crianca_5_10_altura_x_idade_muito_baixa      <dbl> NA, NA, NA, NA, NA, 0.954~
+#> $ crianca_5_10_altura_x_idade_baixa            <dbl> NA, NA, NA, NA, NA, 1.378~
+#> $ crianca_5_10_altura_x_idade_adequada         <dbl> NA, NA, NA, NA, NA, 97.66~
+#> $ crianca_0_4_imc_x_idade_magreza_acentuada    <dbl> NA, NA, NA, NA, NA, 1.104~
+#> $ crianca_0_4_imc_x_idade_magreza              <dbl> NA, NA, NA, NA, NA, 1.012~
+#> $ crianca_0_4_imc_x_idade_adequado             <dbl> NA, NA, NA, NA, NA, 65.46~
+#> $ crianca_0_4_imc_x_idade_risco_sobrepeso      <dbl> NA, NA, NA, NA, NA, 19.33~
+#> $ crianca_0_4_imc_x_idade_sobrepeso            <dbl> NA, NA, NA, NA, NA, 7.918~
+#> $ crianca_0_4_imc_x_idade_obesidade            <dbl> NA, NA, NA, NA, NA, 5.156~
+#> $ crianca_5_10_imc_x_idade_magreza_acentuada   <dbl> NA, NA, NA, NA, NA, 1.272~
+#> $ crianca_5_10_imc_x_idade_magreza             <dbl> NA, NA, NA, NA, NA, 2.651~
+#> $ crianca_5_10_imc_x_idade_adequado            <dbl> NA, NA, NA, NA, NA, 60.12~
+#> $ crianca_5_10_imc_x_idade_risco_sobrepeso     <dbl> NA, NA, NA, NA, NA, 19.19~
+#> $ crianca_5_10_imc_x_idade_sobrepeso           <dbl> NA, NA, NA, NA, NA, 9.119~
+#> $ crianca_5_10_imc_x_idade_obesidade           <dbl> NA, NA, NA, NA, NA, 7.635~
+#> $ adolescente_altura_x_idade_muito_baixa       <dbl> NA, NA, NA, NA, NA, 20.21~
+#> $ adolescente_altura_x_idade_baixa             <dbl> NA, NA, NA, NA, NA, 76.82~
+#> $ adolescente_altura_x_idade_adequada          <dbl> NA, NA, NA, NA, NA, 2.955~
+#> $ adolescente_imc_x_idade_magreza_acentuada    <dbl> NA, NA, NA, NA, NA, 0.662~
+#> $ adolescente_imc_x_idade_magreza              <dbl> NA, NA, NA, NA, NA, 1.920~
+#> $ adolescente_imc_x_idade_adequado             <dbl> NA, NA, NA, NA, NA, 58.60~
+#> $ adolescente_imc_x_idade_sobrepeso            <dbl> NA, NA, NA, NA, NA, 23.44~
+#> $ adolescente_imc_x_idade_obesidade            <dbl> NA, NA, NA, NA, NA, 12.91~
+#> $ adolescente_imc_x_idade_obesidade_grave      <dbl> NA, NA, NA, NA, NA, 2.450~
+#> $ adulto_imc_baixo_peso                        <dbl> NA, NA, NA, NA, NA, 2.047~
+#> $ adulto_imc_adequado                          <dbl> NA, NA, NA, NA, NA, 27.81~
+#> $ adulto_imc_sobrepeso                         <dbl> NA, NA, NA, NA, NA, 32.82~
+#> $ adulto_imc_obesidade_grau_i                  <dbl> NA, NA, NA, NA, NA, 21.44~
+#> $ adulto_imc_obesidade_grau_ii                 <dbl> NA, NA, NA, NA, NA, 9.044~
+#> $ adulto_imc_obesidade_grau_iii                <dbl> NA, NA, NA, NA, NA, 6.825~
+#> $ idoso_imc_baixo_peso                         <dbl> NA, NA, NA, NA, NA, 9.142~
+#> $ idoso_imc_adequado                           <dbl> NA, NA, NA, NA, NA, 30.44~
+#> $ idoso_imc_sobrepeso                          <dbl> NA, NA, NA, NA, NA, 60.41~
 ```
 
 ------------------------------------------------------------------------
