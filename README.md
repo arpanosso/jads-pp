@@ -147,6 +147,80 @@ corrplot(cor_matrix, method="ellipse")
 - Variáveis altamente correlacionadas, apenas uma delas representa bem
   esse banco de dados
 
+``` r
+pca <-  prcomp(df,
+               scale=T)
+# Autovalores
+eig<-pca$sdev^2
+print(round(eig,3))
+#> [1] 2.999 0.001 0.000
+ve<-eig/sum(eig)
+print(round(ve,4))
+#> [1] 0.9997 0.0002 0.0001
+print(round(cumsum(ve),4)*100)
+#> [1]  99.97  99.99 100.00
+mcor<-cor(df,pca$x)
+corrplot(mcor)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+``` r
+screeplot(pca)
+abline(h=1)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-12-2.png)<!-- -->
+
+``` r
+pc1V<-cor(df,pca$x)[,1]/sd(cor(df,pca$x)[,1])
+pc2V<-cor(df,pca$x)[,2]/sd(cor(df,pca$x)[,2])
+pc3V<-cor(df,pca$x)[,3]/sd(cor(df,pca$x)[,3])
+pc1c<-pca$x[,1]/sd(pca$x[,1])
+pc2c<-pca$x[,2]/sd(pca$x[,2])
+pc3c<-pca$x[,3]/sd(pca$x[,3])
+nv<-ncol(df)
+```
+
+``` r
+bip<-data.frame(pc1c,pc2c,pc3c)#,nome)
+texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
+)
+
+bip %>% 
+  ggplot(aes(x=pc1c, y=pc2c))+
+  geom_point() +
+  geom_vline(aes(xintercept=0),
+             color="black", size=1) +
+  geom_hline(aes(yintercept=0),
+             color="black", size=1) +
+  annotate(geom="segment",
+           x=rep(0,length(df)),
+           xend=texto$x,
+           y=rep(0,length(df)),
+           yend=texto$y,color="black",lwd=.5) +
+  geom_label(data=texto,aes(x=x,y=y,label=label),
+             color="black",angle=0,fontface="bold",size=4,fill="white") +
+  labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
+       y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
+       color="",shape="") +
+  theme(legend.position = "top")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+``` r
+ck<-sum(pca$sdev^2>=0.98)
+tabelapca<-vector()
+for( l in 1:ck) tabelapca<-cbind(tabelapca,mcor[,l])
+colnames(tabelapca)<-paste(rep(c("PC"),ck),1:ck,sep="")
+pcat<-round(tabelapca,3)
+tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
+print(tabelapca)
+#>    pbf_valor pbf_familias  pbf_pessoas 
+#>    0.9998245    0.9998260    0.9998837
+```
+
 ------------------------------------------------------------------------
 
 **DESAFIO 2**. Combater a insegurança alimentar e nutricional e promover
@@ -211,7 +285,7 @@ lavouras %>%
   theme(axis.text.x = element_text(angle = 90, hjust=1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
 lavouras <- lavouras %>% 
@@ -272,7 +346,7 @@ tabe_lavouras %>%
         axis.title.y.right = element_text(color = "red"))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ``` r
 tabe_lavouras %>% 
@@ -289,7 +363,7 @@ tabe_lavouras %>%
         axis.title.y.right = element_text(color = "red"))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ``` r
 tabe_lavouras %>% 
@@ -306,7 +380,7 @@ tabe_lavouras %>%
         axis.title.y.right = element_text(color = "red"))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 ``` r
 tabe_lavouras %>% 
@@ -323,7 +397,7 @@ tabe_lavouras %>%
         axis.title.y.right = element_text(color = "red"))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 ``` r
 tabe_lavouras %>% 
@@ -340,7 +414,7 @@ tabe_lavouras %>%
         axis.title.y.right = element_text(color = "red"))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 #### Tabela de Dados
 
@@ -383,8 +457,9 @@ lavouras_resu <- lavouras %>%
     pvalortem = mean(prop_valor_producao_temporaria,na.rm=TRUE) 
   )
 
-data_set_muni <- left_join(data_set_muni, lavouras_resu,
-          by="nome")
+data_set_muni <- left_join(data_set_muni,
+                           lavouras_resu,
+                           by="nome")
 ```
 
 #### Agrupamento e Correlação
@@ -401,7 +476,7 @@ df <- da_pad %>%
 visdat::vis_miss(da_pad)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
 
 ``` r
 da_pad_euc<-vegdist(df,"euclidean",na.rm=TRUE) 
@@ -413,7 +488,7 @@ plot(da_pad_euc_ward,
      cex=.6,lwd=1.5);box()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 ``` r
 grupo<-cutree(da_pad_euc_ward,3)
@@ -424,7 +499,90 @@ cor_matrix <- cor(df, use = "na.or.complete")
 corrplot(cor_matrix, method="ellipse")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+
+``` r
+pca <-  prcomp(df,
+               scale=T)
+# Autovalores
+eig<-pca$sdev^2
+print(round(eig,3))
+#>  [1] 4.092 2.062 1.059 0.983 0.746 0.632 0.247 0.178 0.000 0.000
+ve<-eig/sum(eig)
+print(round(ve,4))
+#>  [1] 0.4092 0.2062 0.1059 0.0983 0.0746 0.0632 0.0247 0.0178 0.0000 0.0000
+print(round(cumsum(ve),4)*100)
+#>  [1]  40.92  61.54  72.14  81.96  89.42  95.74  98.22  99.99 100.00 100.00
+mcor<-cor(df,pca$x)
+corrplot(mcor)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+
+``` r
+screeplot(pca)
+abline(h=1)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-29-2.png)<!-- -->
+
+``` r
+pc1V<-cor(df,pca$x)[,1]/sd(cor(df,pca$x)[,1])
+pc2V<-cor(df,pca$x)[,2]/sd(cor(df,pca$x)[,2])
+pc3V<-cor(df,pca$x)[,3]/sd(cor(df,pca$x)[,3])
+pc1c<-pca$x[,1]/sd(pca$x[,1])
+pc2c<-pca$x[,2]/sd(pca$x[,2])
+pc3c<-pca$x[,3]/sd(pca$x[,3])
+nv<-ncol(df)
+```
+
+``` r
+bip<-data.frame(pc1c,pc2c,pc3c)#,nome)
+texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
+)
+
+bip %>% 
+  ggplot(aes(x=pc1c, y=pc2c))+
+  geom_point() +
+  geom_vline(aes(xintercept=0),
+             color="black", size=1) +
+  geom_hline(aes(yintercept=0),
+             color="black", size=1) +
+  annotate(geom="segment",
+           x=rep(0,length(df)),
+           xend=texto$x,
+           y=rep(0,length(df)),
+           yend=texto$y,color="black",lwd=.5) +
+  geom_label(data=texto,aes(x=x,y=y,label=label),
+             color="black",angle=0,fontface="bold",size=4,fill="white") +
+  labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
+       y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
+       color="",shape="") +
+  theme(legend.position = "top")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+
+``` r
+ck<-sum(pca$sdev^2>=0.98)
+tabelapca<-vector()
+for( l in 1:ck) tabelapca<-cbind(tabelapca,mcor[,l])
+colnames(tabelapca)<-paste(rep(c("PC"),ck),1:ck,sep="")
+pcat<-round(tabelapca,3)
+tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
+print(tabelapca)
+#>                      PC1         PC2          PC3         PC4
+#> rendtem      -0.04708496  0.21807874 -0.713949932 -0.64883914
+#> areapltem    -0.30014502 -0.52921096  0.253446179 -0.52208918
+#> areapper     -0.39698776  0.07517774  0.591205813 -0.48642547
+#> rendper      -0.42761927  0.43689673 -0.074738527  0.07196900
+#> nptem        -0.74590283 -0.51897888  0.061782650  0.12084689
+#> pvalortem     0.76169795  0.54323547  0.243636761 -0.11029465
+#> pacolhidatem  0.76242146  0.54262736  0.244650423 -0.10840504
+#> npper        -0.78002635  0.42353001  0.083150131  0.09287658
+#> pacolhidaper  0.81619937 -0.50057565 -0.009783809 -0.01309159
+#> pvalorpper    0.81677853 -0.49899389 -0.009769515 -0.01181416
+```
 
 ------------------------------------------------------------------------
 
@@ -441,6 +599,10 @@ SAN; Agricultura urbana.
 4.1.3 Valor Formalizado  
 4.1.4 Valor Executado **(OK)**
 
+### Base de dados - “pnae”
+
+essa base precisa ser previamente construída.
+
 ``` r
 pnae_alunos <- read_rds("data/pnae_alunos_atendidos.rds")
 # glimpse(pnae_alunos)
@@ -453,7 +615,6 @@ pnae_recurso <-  pnae_recurso %>%
   mutate(modalidade_ensino = ifelse(modalidade_ensino == "EJA",
                                     "EDUCAÇÃO DE JOVENS E ADULTOS (EJA)",
                                     modalidade_ensino))
-# pnae_recurso$modalidade_ensino %>% unique()
 ```
 
 ``` r
@@ -462,20 +623,68 @@ pnae_recurso <- pnae_recurso %>%
   summarise(vl_total_escolas = mean(vl_total_escolas)) %>% 
   rename(etapa_ensino = modalidade_ensino) %>% 
   filter(etapa_ensino %in% lista_etapas)
+visdat::vis_miss(pnae_recurso)
 ```
 
+![](README_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+
+### Visualização de dados
+
 ``` r
-pnae <- left_join(pnae_alunos %>% 
+pnae <- left_join(pnae_alunos %>% filter(esfera_governo == "MUNICIPAL") %>%
           select(ano:qt_alunos_pnae,nome),
         pnae_recurso,
         by =c("nome","ano","esfera_governo","etapa_ensino"))
-# glimpse(pnae)
+
+tab_pane <- pnae %>%  
+  group_by(ano,etapa_ensino) %>% 
+  summarise(
+    qt_alunos_pnae = sum(qt_alunos_pnae, na.rm=TRUE),
+    vl_total_escolas = sum(vl_total_escolas, na.rm=TRUE)
+  )
 ```
 
 ``` r
-# pnae_escola <- read_rds("data/pnae_escolas.rds")
-# pnae_conselho <- read_rds("data/pnae_conselho_alim_esco.rds")
+coeff <- 1/.009
+tab_pane %>% 
+    ggplot(aes(x = ano)) +
+  geom_line(aes(y = qt_alunos_pnae), color="red") +
+  geom_line(aes(y = vl_total_escolas/coeff)) +
+  scale_y_continuous(
+    name = "qt_alunos_pnae",
+    sec.axis = sec_axis(~.*coeff, name="vl_total_escolas")
+  ) +
+  facet_wrap(~etapa_ensino, scale="free") +
+  theme(axis.line.y.right = element_line(color = "red"), 
+        axis.ticks.y.right = element_line(color = "red"),
+        axis.text.y.right = element_text(color = "red"),
+        axis.title.y.right = element_text(color = "red"))
 ```
+
+![](README_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+
+#### Tabela de Dados
+
+``` r
+tab_pane %>% filter(ano >= 2010, ano <= 2020)
+#> # A tibble: 85 x 4
+#> # Groups:   ano [11]
+#>      ano etapa_ensino                       qt_alunos_pnae vl_total_escolas
+#>    <dbl> <chr>                                       <dbl>            <dbl>
+#>  1  2010 CRECHE                                     423183         49824792
+#>  2  2010 EDUCAÇÃO DE JOVENS E ADULTOS (EJA)         250229         25060294
+#>  3  2010 ENSINO FUNDAMENTAL                        2477697        817556272
+#>  4  2010 ENSINO MÉDIO                                36920         19336626
+#>  5  2010 INDÍGENA                                      541            66120
+#>  6  2010 PRÉ-ESCOLA                                 931977        228192908
+#>  7  2010 QUILOMBOLA                                    968           165720
+#>  8  2011 CRECHE                                     476833         56876772
+#>  9  2011 EDUCAÇÃO DE JOVENS E ADULTOS (EJA)         230611         24913236
+#> 10  2011 ENSINO FUNDAMENTAL                        2448374        222912870
+#> # i 75 more rows
+```
+
+#### Criando a base resumo
 
 ``` r
 data_set <- left_join(data_set, pnae %>% 
@@ -485,21 +694,158 @@ data_set <- left_join(data_set, pnae %>%
                       vl_total_escolas = sum(vl_total_escolas,na.rm=TRUE)
                       ), 
           by=c("ano","nome"))
+```
 
-
-pnae_resumo <- pnae %>% 
+``` r
+pnae_resumo <- pnae %>% filter(ano >= 2010, ano <= 2020) %>% 
   drop_na() %>% 
-  group_by(ano, nome) %>% 
+  group_by(ano, nome, etapa_ensino) %>% 
   summarise(qt_alunos_pnae = sum(qt_alunos_pnae,na.rm=TRUE),
             vl_total_escolas = sum(vl_total_escolas,na.rm=TRUE)
   ) %>% filter(ano >=2010) %>% 
+  pivot_wider(names_from =  etapa_ensino,
+              values_from = c(qt_alunos_pnae,vl_total_escolas)) %>% 
   group_by(nome) %>% 
-  summarise(
-    pnae_qa = mean(qt_alunos_pnae, na.rm=TRUE),
-    pnae_vte = mean(vl_total_escolas, na.rm=TRUE)
-  )
+  mutate(across(qt_alunos_pnae_CRECHE:`vl_total_escolas_ATENDIMENTO EDUCACIONAL ESPECIALIZADO (AEE)`, function(x) mean(x,na.rm=TRUE) )
+         ) %>% 
+  janitor::clean_names() %>% filter(ano == 2019) %>% 
+  select(-ano)
+
+
+pnae_resumo <- pnae_resumo %>% 
+  select(-qt_alunos_pnae_ensino_medio,
+         -qt_alunos_pnae_indigena,
+         -qt_alunos_pnae_quilombola,
+         -vl_total_escolas_ensino_medio,
+         -vl_total_escolas_indigena,
+         -vl_total_escolas_quilombola
+         )
+nomes_antigos <- names(pnae_resumo)
+nomes_novos <- c(
+  "nome", "qt_creche", "qt_eja", "qt_fundamental",                         
+  "qt_pre_escola", "qt_aee", "vl_creche", "vl_eja",         
+  "vl_fundamental", "vl_pre_escola", "vl_aee")
+pnae_resumo <- pnae_resumo %>% 
+  rename_at(vars(nomes_antigos),~nomes_novos)
 data_set_muni <- left_join(data_set_muni, pnae_resumo, by = "nome")
 ```
+
+#### Agrupamento e Correlação
+
+``` r
+nomes <- pnae_resumo$nome
+da <- pnae_resumo
+da_pad <- decostand(da[-1] , 
+                      method = "standardize",
+                      na.rm=TRUE)
+df <- da_pad %>% 
+  drop_na()
+
+visdat::vis_miss(da_pad)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
+
+``` r
+da_pad_euc<-vegdist(df,"euclidean",na.rm=TRUE) 
+da_pad_euc_ward<-hclust(da_pad_euc, method="ward.D")
+plot(da_pad_euc_ward, 
+     ylab="Distância Euclidiana",
+     xlab="Acessos", hang=-1,
+     col="blue", las=1,
+     cex=.6,lwd=1.5);box()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+
+``` r
+grupo<-cutree(da_pad_euc_ward,3)
+```
+
+``` r
+cor_matrix <- cor(df, use = "na.or.complete")
+corrplot(cor_matrix, method="ellipse")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
+
+``` r
+pca <-  prcomp(df,
+               scale=T)
+# Autovalores
+eig<-pca$sdev^2
+print(round(eig,3))
+#>  [1] 9.739 0.134 0.074 0.019 0.015 0.010 0.005 0.002 0.001 0.001
+ve<-eig/sum(eig)
+print(round(ve,4))
+#>  [1] 0.9739 0.0134 0.0074 0.0019 0.0015 0.0010 0.0005 0.0002 0.0001 0.0001
+print(round(cumsum(ve),4)*100)
+#>  [1]  97.39  98.73  99.47  99.66  99.82  99.91  99.96  99.98  99.99 100.00
+mcor<-cor(df,pca$x)
+corrplot(mcor)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-43-1.png)<!-- -->
+
+``` r
+screeplot(pca)
+abline(h=1)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-43-2.png)<!-- -->
+
+``` r
+pc1V<-cor(df,pca$x)[,1]/sd(cor(df,pca$x)[,1])
+pc2V<-cor(df,pca$x)[,2]/sd(cor(df,pca$x)[,2])
+pc3V<-cor(df,pca$x)[,3]/sd(cor(df,pca$x)[,3])
+pc1c<-pca$x[,1]/sd(pca$x[,1])
+pc2c<-pca$x[,2]/sd(pca$x[,2])
+pc3c<-pca$x[,3]/sd(pca$x[,3])
+nv<-ncol(df)
+```
+
+``` r
+bip<-data.frame(pc1c,pc2c,pc3c)#,nome)
+texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
+)
+
+bip %>% 
+  ggplot(aes(x=pc1c, y=pc2c))+
+  geom_point() +
+  geom_vline(aes(xintercept=0),
+             color="black", size=1) +
+  geom_hline(aes(yintercept=0),
+             color="black", size=1) +
+  annotate(geom="segment",
+           x=rep(0,length(df)),
+           xend=texto$x,
+           y=rep(0,length(df)),
+           yend=texto$y,color="black",lwd=.5) +
+  geom_label(data=texto,aes(x=x,y=y,label=label),
+             color="black",angle=0,fontface="bold",size=4,fill="white") +
+  labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
+       y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
+       color="",shape="") +
+  theme(legend.position = "top")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
+
+``` r
+ck<-sum(pca$sdev^2>=0.98)
+tabelapca<-vector()
+for( l in 1:ck) tabelapca<-cbind(tabelapca,mcor[,l])
+colnames(tabelapca)<-paste(rep(c("PC"),ck),1:ck,sep="")
+pcat<-round(tabelapca,3)
+tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
+print(tabelapca)
+#>         vl_eja         vl_aee vl_fundamental         qt_aee         qt_eja 
+#>      0.9654211      0.9696570      0.9785890      0.9822901      0.9924076 
+#>  vl_pre_escola qt_fundamental      vl_creche      qt_creche  qt_pre_escola 
+#>      0.9945879      0.9945986      0.9965005      0.9966803      0.9973557
+```
+
+Alta correlação
 
 **4.2 Banco de Leite **  
 4.2.1 Próprio **(OK)**  
@@ -898,7 +1244,7 @@ mais
 da <- data_set_muni %>% ungroup()
 glimpse(da)
 #> Rows: 645
-#> Columns: 88
+#> Columns: 96
 #> $ nome                <chr> "Adamantina", "Adolfo", "Aguaí", "Agudos", "Alamba~
 #> $ pbf_familias        <dbl> 331.5667, 140.5833, 1400.9833, 996.7167, 204.4333,~
 #> $ pbf_pessoas         <dbl> 363.9667, 191.3000, 1795.1833, 1254.7333, 275.1667~
@@ -913,8 +1259,16 @@ glimpse(da)
 #> $ pacolhidatem        <dbl> 13.21388, 14.02318, 11.51983, 17.67809, 14.10731, ~
 #> $ pvalorpper          <dbl> 11.618295, 17.249375, 13.393107, 56.667333, 44.999~
 #> $ pvalortem           <dbl> 13.21407, 14.02388, 11.52053, 17.67832, 14.10718, ~
-#> $ pnae_qa             <dbl> 2656.5385, 636.0000, 4265.6154, 4010.7692, 649.500~
-#> $ pnae_vte            <dbl> 322282.32, 40735.03, 462165.75, 522470.72, 77041.7~
+#> $ qt_creche           <dbl> 538.27273, NA, 355.81818, 780.81818, 107.00000, 66~
+#> $ qt_eja              <dbl> 58.72727, NA, 405.36364, 27.90909, NaN, NaN, 21.63~
+#> $ qt_fundamental      <dbl> 1506.3636, NA, 2656.1818, 2259.0909, 423.0000, NaN~
+#> $ qt_pre_escola       <dbl> 544.18182, NA, 776.45455, 908.54545, 116.72727, 85~
+#> $ qt_aee              <dbl> 31.500, NA, 43.375, 42.625, NaN, NaN, 12.125, 16.0~
+#> $ vl_creche           <dbl> 97775.333, NA, 70025.860, 143195.827, 19070.314, 1~
+#> $ vl_eja              <dbl> 14684.289, NA, 25614.299, 9649.553, NaN, NaN, 2832~
+#> $ vl_fundamental      <dbl> 172094.59, NA, 269777.39, 273236.73, 47856.72, NaN~
+#> $ vl_pre_escola       <dbl> 49375.916, NA, 76544.117, 107605.786, 10663.679, 9~
+#> $ vl_aee              <dbl> 4427.1900, NA, 6349.7527, 7976.0499, NaN, NaN, 121~
 #> $ snutrip             <dbl> 46.0588235, 0.0000000, 10.2352941, 12.0000000, 0.6~
 #> $ snutrit             <dbl> 0.0000000, 0.0000000, 0.4117647, 0.0000000, 0.0000~
 #> $ slacp               <dbl> 0.000000, 0.000000, 5.470588, 12.000000, 0.000000,~

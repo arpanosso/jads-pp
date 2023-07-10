@@ -129,6 +129,65 @@ corrplot(cor_matrix, method="ellipse")
 - Variáveis altamente correlacionadas, apenas uma delas representa bem esse banco de dados
 
 
+```{r}
+pca <-  prcomp(df,
+               scale=T)
+# Autovalores
+eig<-pca$sdev^2
+print(round(eig,3))
+ve<-eig/sum(eig)
+print(round(ve,4))
+print(round(cumsum(ve),4)*100)
+mcor<-cor(df,pca$x)
+corrplot(mcor)
+screeplot(pca)
+abline(h=1)
+pc1V<-cor(df,pca$x)[,1]/sd(cor(df,pca$x)[,1])
+pc2V<-cor(df,pca$x)[,2]/sd(cor(df,pca$x)[,2])
+pc3V<-cor(df,pca$x)[,3]/sd(cor(df,pca$x)[,3])
+pc1c<-pca$x[,1]/sd(pca$x[,1])
+pc2c<-pca$x[,2]/sd(pca$x[,2])
+pc3c<-pca$x[,3]/sd(pca$x[,3])
+nv<-ncol(df)
+```
+
+```{r}
+bip<-data.frame(pc1c,pc2c,pc3c)#,nome)
+texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
+)
+
+bip %>% 
+  ggplot(aes(x=pc1c, y=pc2c))+
+  geom_point() +
+  geom_vline(aes(xintercept=0),
+             color="black", size=1) +
+  geom_hline(aes(yintercept=0),
+             color="black", size=1) +
+  annotate(geom="segment",
+           x=rep(0,length(df)),
+           xend=texto$x,
+           y=rep(0,length(df)),
+           yend=texto$y,color="black",lwd=.5) +
+  geom_label(data=texto,aes(x=x,y=y,label=label),
+             color="black",angle=0,fontface="bold",size=4,fill="white") +
+  labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
+       y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
+       color="",shape="") +
+  theme(legend.position = "top")
+```
+
+```{r}
+ck<-sum(pca$sdev^2>=0.98)
+tabelapca<-vector()
+for( l in 1:ck) tabelapca<-cbind(tabelapca,mcor[,l])
+colnames(tabelapca)<-paste(rep(c("PC"),ck),1:ck,sep="")
+pcat<-round(tabelapca,3)
+tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
+print(tabelapca)
+```
+
+
+
 ---
 
 **DESAFIO 2**. Combater a insegurança alimentar e nutricional e promover a inclusão produtiva rural em grupos populacionais específicos, com ênfase em povos e comunidades tradicionais e outros grupos sociais vulneráveis no meio rural.
@@ -336,8 +395,9 @@ lavouras_resu <- lavouras %>%
     pvalortem = mean(prop_valor_producao_temporaria,na.rm=TRUE) 
   )
 
-data_set_muni <- left_join(data_set_muni, lavouras_resu,
-          by="nome")
+data_set_muni <- left_join(data_set_muni,
+                           lavouras_resu,
+                           by="nome")
 ```
 
 #### Agrupamento e Correlação
@@ -371,6 +431,64 @@ cor_matrix <- cor(df, use = "na.or.complete")
 corrplot(cor_matrix, method="ellipse")
 ```
 
+
+```{r}
+pca <-  prcomp(df,
+               scale=T)
+# Autovalores
+eig<-pca$sdev^2
+print(round(eig,3))
+ve<-eig/sum(eig)
+print(round(ve,4))
+print(round(cumsum(ve),4)*100)
+mcor<-cor(df,pca$x)
+corrplot(mcor)
+screeplot(pca)
+abline(h=1)
+pc1V<-cor(df,pca$x)[,1]/sd(cor(df,pca$x)[,1])
+pc2V<-cor(df,pca$x)[,2]/sd(cor(df,pca$x)[,2])
+pc3V<-cor(df,pca$x)[,3]/sd(cor(df,pca$x)[,3])
+pc1c<-pca$x[,1]/sd(pca$x[,1])
+pc2c<-pca$x[,2]/sd(pca$x[,2])
+pc3c<-pca$x[,3]/sd(pca$x[,3])
+nv<-ncol(df)
+```
+
+```{r}
+bip<-data.frame(pc1c,pc2c,pc3c)#,nome)
+texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
+)
+
+bip %>% 
+  ggplot(aes(x=pc1c, y=pc2c))+
+  geom_point() +
+  geom_vline(aes(xintercept=0),
+             color="black", size=1) +
+  geom_hline(aes(yintercept=0),
+             color="black", size=1) +
+  annotate(geom="segment",
+           x=rep(0,length(df)),
+           xend=texto$x,
+           y=rep(0,length(df)),
+           yend=texto$y,color="black",lwd=.5) +
+  geom_label(data=texto,aes(x=x,y=y,label=label),
+             color="black",angle=0,fontface="bold",size=4,fill="white") +
+  labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
+       y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
+       color="",shape="") +
+  theme(legend.position = "top")
+```
+
+```{r}
+ck<-sum(pca$sdev^2>=0.98)
+tabelapca<-vector()
+for( l in 1:ck) tabelapca<-cbind(tabelapca,mcor[,l])
+colnames(tabelapca)<-paste(rep(c("PC"),ck),1:ck,sep="")
+pcat<-round(tabelapca,3)
+tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
+print(tabelapca)
+```
+
 ---
 
 **DESAFIO 4**. Promover o abastecimento e o acesso regular e permanente da população brasileira à alimentação 
@@ -383,18 +501,22 @@ Temas: Compras públicas; Abastecimento; Legislação sanitária; Economia solid
 4.1.3 Valor Formalizado   
 4.1.4 Valor Executado  **(OK)**  
 
+
+### Base de dados - "pnae"
+essa base precisa ser previamente construída.
+
 ```{r}
 pnae_alunos <- read_rds("data/pnae_alunos_atendidos.rds")
 # glimpse(pnae_alunos)
 lista_etapas <- pnae_alunos$etapa_ensino %>% unique()
 ```
+
 ```{r}
 pnae_recurso <- read_rds("data/pnae_recurso.rds") 
 pnae_recurso <-  pnae_recurso %>% 
   mutate(modalidade_ensino = ifelse(modalidade_ensino == "EJA",
                                     "EDUCAÇÃO DE JOVENS E ADULTOS (EJA)",
                                     modalidade_ensino))
-# pnae_recurso$modalidade_ensino %>% unique()
 ```
 
 
@@ -404,21 +526,51 @@ pnae_recurso <- pnae_recurso %>%
   summarise(vl_total_escolas = mean(vl_total_escolas)) %>% 
   rename(etapa_ensino = modalidade_ensino) %>% 
   filter(etapa_ensino %in% lista_etapas)
+visdat::vis_miss(pnae_recurso)
 ```
 
+### Visualização de dados
 
 ```{r}
-pnae <- left_join(pnae_alunos %>% 
+pnae <- left_join(pnae_alunos %>% filter(esfera_governo == "MUNICIPAL") %>%
           select(ano:qt_alunos_pnae,nome),
         pnae_recurso,
         by =c("nome","ano","esfera_governo","etapa_ensino"))
-# glimpse(pnae)
+
+tab_pane <- pnae %>%  
+  group_by(ano,etapa_ensino) %>% 
+  summarise(
+    qt_alunos_pnae = sum(qt_alunos_pnae, na.rm=TRUE),
+    vl_total_escolas = sum(vl_total_escolas, na.rm=TRUE)
+  )
 ```
 
 ```{r}
-# pnae_escola <- read_rds("data/pnae_escolas.rds")
-# pnae_conselho <- read_rds("data/pnae_conselho_alim_esco.rds")
+coeff <- 1/.009
+tab_pane %>% 
+    ggplot(aes(x = ano)) +
+  geom_line(aes(y = qt_alunos_pnae), color="red") +
+  geom_line(aes(y = vl_total_escolas/coeff)) +
+  scale_y_continuous(
+    name = "qt_alunos_pnae",
+    sec.axis = sec_axis(~.*coeff, name="vl_total_escolas")
+  ) +
+  facet_wrap(~etapa_ensino, scale="free") +
+  theme(axis.line.y.right = element_line(color = "red"), 
+        axis.ticks.y.right = element_line(color = "red"),
+        axis.text.y.right = element_text(color = "red"),
+        axis.title.y.right = element_text(color = "red"))
+
 ```
+
+
+#### Tabela de Dados
+```{r}
+tab_pane %>% filter(ano >= 2010, ano <= 2020)
+```
+
+
+#### Criando a base resumo
 
 ```{r}
 data_set <- left_join(data_set, pnae %>% 
@@ -428,22 +580,133 @@ data_set <- left_join(data_set, pnae %>%
                       vl_total_escolas = sum(vl_total_escolas,na.rm=TRUE)
                       ), 
           by=c("ano","nome"))
+```
 
 
-pnae_resumo <- pnae %>% 
+```{r}
+pnae_resumo <- pnae %>% filter(ano >= 2010, ano <= 2020) %>% 
   drop_na() %>% 
-  group_by(ano, nome) %>% 
+  group_by(ano, nome, etapa_ensino) %>% 
   summarise(qt_alunos_pnae = sum(qt_alunos_pnae,na.rm=TRUE),
             vl_total_escolas = sum(vl_total_escolas,na.rm=TRUE)
   ) %>% filter(ano >=2010) %>% 
+  pivot_wider(names_from =  etapa_ensino,
+              values_from = c(qt_alunos_pnae,vl_total_escolas)) %>% 
   group_by(nome) %>% 
-  summarise(
-    pnae_qa = mean(qt_alunos_pnae, na.rm=TRUE),
-    pnae_vte = mean(vl_total_escolas, na.rm=TRUE)
-  )
+  mutate(across(qt_alunos_pnae_CRECHE:`vl_total_escolas_ATENDIMENTO EDUCACIONAL ESPECIALIZADO (AEE)`, function(x) mean(x,na.rm=TRUE) )
+         ) %>% 
+  janitor::clean_names() %>% filter(ano == 2019) %>% 
+  select(-ano)
+
+
+pnae_resumo <- pnae_resumo %>% 
+  select(-qt_alunos_pnae_ensino_medio,
+         -qt_alunos_pnae_indigena,
+         -qt_alunos_pnae_quilombola,
+         -vl_total_escolas_ensino_medio,
+         -vl_total_escolas_indigena,
+         -vl_total_escolas_quilombola
+         )
+nomes_antigos <- names(pnae_resumo)
+nomes_novos <- c(
+  "nome", "qt_creche", "qt_eja", "qt_fundamental",                         
+  "qt_pre_escola", "qt_aee", "vl_creche", "vl_eja",         
+  "vl_fundamental", "vl_pre_escola", "vl_aee")
+pnae_resumo <- pnae_resumo %>% 
+  rename_at(vars(nomes_antigos),~nomes_novos)
 data_set_muni <- left_join(data_set_muni, pnae_resumo, by = "nome")
 ```
 
+#### Agrupamento e Correlação
+
+```{r}
+nomes <- pnae_resumo$nome
+da <- pnae_resumo
+da_pad <- decostand(da[-1] , 
+                      method = "standardize",
+                      na.rm=TRUE)
+df <- da_pad %>% 
+  drop_na()
+
+visdat::vis_miss(da_pad)
+```
+
+```{r}
+da_pad_euc<-vegdist(df,"euclidean",na.rm=TRUE) 
+da_pad_euc_ward<-hclust(da_pad_euc, method="ward.D")
+plot(da_pad_euc_ward, 
+     ylab="Distância Euclidiana",
+     xlab="Acessos", hang=-1,
+     col="blue", las=1,
+     cex=.6,lwd=1.5);box()
+grupo<-cutree(da_pad_euc_ward,3)
+```
+
+
+```{r}
+cor_matrix <- cor(df, use = "na.or.complete")
+corrplot(cor_matrix, method="ellipse")
+```
+
+
+```{r}
+pca <-  prcomp(df,
+               scale=T)
+# Autovalores
+eig<-pca$sdev^2
+print(round(eig,3))
+ve<-eig/sum(eig)
+print(round(ve,4))
+print(round(cumsum(ve),4)*100)
+mcor<-cor(df,pca$x)
+corrplot(mcor)
+screeplot(pca)
+abline(h=1)
+pc1V<-cor(df,pca$x)[,1]/sd(cor(df,pca$x)[,1])
+pc2V<-cor(df,pca$x)[,2]/sd(cor(df,pca$x)[,2])
+pc3V<-cor(df,pca$x)[,3]/sd(cor(df,pca$x)[,3])
+pc1c<-pca$x[,1]/sd(pca$x[,1])
+pc2c<-pca$x[,2]/sd(pca$x[,2])
+pc3c<-pca$x[,3]/sd(pca$x[,3])
+nv<-ncol(df)
+```
+
+```{r}
+bip<-data.frame(pc1c,pc2c,pc3c)#,nome)
+texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
+)
+
+bip %>% 
+  ggplot(aes(x=pc1c, y=pc2c))+
+  geom_point() +
+  geom_vline(aes(xintercept=0),
+             color="black", size=1) +
+  geom_hline(aes(yintercept=0),
+             color="black", size=1) +
+  annotate(geom="segment",
+           x=rep(0,length(df)),
+           xend=texto$x,
+           y=rep(0,length(df)),
+           yend=texto$y,color="black",lwd=.5) +
+  geom_label(data=texto,aes(x=x,y=y,label=label),
+             color="black",angle=0,fontface="bold",size=4,fill="white") +
+  labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
+       y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
+       color="",shape="") +
+  theme(legend.position = "top")
+```
+
+```{r}
+ck<-sum(pca$sdev^2>=0.98)
+tabelapca<-vector()
+for( l in 1:ck) tabelapca<-cbind(tabelapca,mcor[,l])
+colnames(tabelapca)<-paste(rep(c("PC"),ck),1:ck,sep="")
+pcat<-round(tabelapca,3)
+tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
+print(tabelapca)
+```
+
+Alta correlação
 
 **4.2 Banco de Leite **  
 4.2.1 Próprio  **(OK)**  
