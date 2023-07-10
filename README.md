@@ -8,6 +8,10 @@ library(readxl)
 library(tidyverse)
 library(vegan)
 library(corrplot)
+library(bit64)
+library(ggpubr)
+library(stringr)
+library(sf)
 source("R/my-functions.R")
 theme_set(theme_bw())
 ```
@@ -109,7 +113,7 @@ data_set_muni <- data_set %>% filter(ano>= 2015, ano < 2020) %>%
 #### Agrupamento e Correlação
 
 ``` r
-nomes <- data_set_muni$nome
+nome <- data_set_muni$nome
 da <- data_set_muni
 da_pad <- decostand(da[-1] , 
                       method = "standardize",
@@ -183,13 +187,16 @@ nv<-ncol(df)
 ```
 
 ``` r
-bip<-data.frame(pc1c,pc2c,pc3c)#,nome)
+bip<-data.frame(pc1c,pc2c,pc3c,nome,grupo=as.factor(grupo))
 texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
 )
 
 bip %>% 
   ggplot(aes(x=pc1c, y=pc2c))+
   geom_point() +
+  geom_point(aes(shape = grupo, color = grupo), size = 3) + theme_minimal()+
+  scale_shape_manual(values=16:18)+
+  scale_color_manual(values=c("#009E73","#D55E00", "#A6761D"))+
   geom_vline(aes(xintercept=0),
              color="black", size=1) +
   geom_hline(aes(yintercept=0),
@@ -219,6 +226,358 @@ tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
 print(tabelapca)
 #>    pbf_valor pbf_familias  pbf_pessoas 
 #>    0.9998245    0.9998260    0.9998837
+```
+
+``` r
+df_grupo <- data.frame(nome, grupo)
+df_nomes <- read_rds("data/df_nome.rds")
+df_grupo <- left_join(df_grupo,df_nomes %>% select(id_municipio, nome) ,by ="nome")
+d_sf_municipio <- st_read("shp/35MUE250GC_SIR.shp", quiet = TRUE)
+d_sf_municipio <- d_sf_municipio %>%
+  rename(id_municipio = CD_GEOCMU) %>%
+  inner_join(df_grupo %>%
+               relocate(id_municipio), "id_municipio") %>% 
+  mutate(grupo = as.factor(grupo))
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = grupo))+
+  theme_minimal() +
+  scale_fill_viridis_d()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- --> \#### Grupo
+1:
+
+``` r
+nome[grupo == 1]
+#>   [1] "Adamantina"                 "Adolfo"                    
+#>   [3] "Aguaí"                      "Agudos"                    
+#>   [5] "Alambari"                   "Alfredo Marcondes"         
+#>   [7] "Altair"                     "Altinópolis"               
+#>   [9] "Alto Alegre"                "Alumínio"                  
+#>  [11] "Alvinlândia"                "Americana"                 
+#>  [13] "Amparo"                     "Américo Brasiliense"       
+#>  [15] "Américo de Campos"          "Analândia"                 
+#>  [17] "Andradina"                  "Angatuba"                  
+#>  [19] "Anhembi"                    "Anhumas"                   
+#>  [21] "Aparecida"                  "Aparecida d'Oeste"         
+#>  [23] "Apiaí"                      "Aramina"                   
+#>  [25] "Arandu"                     "Arapeí"                    
+#>  [27] "Araraquara"                 "Araras"                    
+#>  [29] "Araçariguama"               "Araçatuba"                 
+#>  [31] "Araçoiaba da Serra"         "Arco-Íris"                 
+#>  [33] "Arealva"                    "Areias"                    
+#>  [35] "Areiópolis"                 "Ariranha"                  
+#>  [37] "Artur Nogueira"             "Arujá"                     
+#>  [39] "Aspásia"                    "Assis"                     
+#>  [41] "Atibaia"                    "Auriflama"                 
+#>  [43] "Avanhandava"                "Avaré"                     
+#>  [45] "Avaí"                       "Bady Bassitt"              
+#>  [47] "Balbinos"                   "Bananal"                   
+#>  [49] "Barbosa"                    "Bariri"                    
+#>  [51] "Barra Bonita"               "Barra do Chapéu"           
+#>  [53] "Barra do Turvo"             "Barretos"                  
+#>  [55] "Barrinha"                   "Barão de Antonina"         
+#>  [57] "Bastos"                     "Batatais"                  
+#>  [59] "Bebedouro"                  "Bento de Abreu"            
+#>  [61] "Bernardino de Campos"       "Bertioga"                  
+#>  [63] "Bilac"                      "Birigui"                   
+#>  [65] "Biritiba-Mirim"             "Boa Esperança do Sul"      
+#>  [67] "Bocaina"                    "Bofete"                    
+#>  [69] "Boituva"                    "Bom Jesus dos Perdões"     
+#>  [71] "Bom Sucesso de Itararé"     "Boracéia"                  
+#>  [73] "Borborema"                  "Borebi"                    
+#>  [75] "Borá"                       "Botucatu"                  
+#>  [77] "Bragança Paulista"          "Braúna"                    
+#>  [79] "Brejo Alegre"               "Brodowski"                 
+#>  [81] "Brotas"                     "Buri"                      
+#>  [83] "Buritama"                   "Buritizal"                 
+#>  [85] "Bálsamo"                    "Cabreúva"                  
+#>  [87] "Cabrália Paulista"          "Cachoeira Paulista"        
+#>  [89] "Caconde"                    "Cafelândia"                
+#>  [91] "Caiabu"                     "Caieiras"                  
+#>  [93] "Caiuá"                      "Cajati"                    
+#>  [95] "Cajobi"                     "Cajuru"                    
+#>  [97] "Campina do Monte Alegre"    "Campo Limpo Paulista"      
+#>  [99] "Campos Novos Paulista"      "Campos do Jordão"          
+#> [101] "Cananéia"                   "Canas"                     
+#> [103] "Canitar"                    "Capela do Alto"            
+#> [105] "Capivari"                   "Capão Bonito"              
+#> [107] "Caraguatatuba"              "Cardoso"                   
+#> [109] "Casa Branca"                "Castilho"                  
+#> [111] "Catanduva"                  "Catiguá"                   
+#> [113] "Caçapava"                   "Cedral"                    
+#> [115] "Cerqueira César"            "Cerquilho"                 
+#> [117] "Cesário Lange"              "Charqueada"                
+#> [119] "Chavantes"                  "Clementina"                
+#> [121] "Colina"                     "Colômbia"                  
+#> [123] "Conchal"                    "Conchas"                   
+#> [125] "Cordeirópolis"              "Coroados"                  
+#> [127] "Coronel Macedo"             "Corumbataí"                
+#> [129] "Cosmorama"                  "Cosmópolis"                
+#> [131] "Cotia"                      "Cravinhos"                 
+#> [133] "Cristais Paulista"          "Cruzeiro"                  
+#> [135] "Cruzália"                   "Cubatão"                   
+#> [137] "Cunha"                      "Cássia dos Coqueiros"      
+#> [139] "Cândido Mota"               "Cândido Rodrigues"         
+#> [141] "Descalvado"                 "Dirce Reis"                
+#> [143] "Divinolândia"               "Dobrada"                   
+#> [145] "Dois Córregos"              "Dolcinópolis"              
+#> [147] "Dourado"                    "Dracena"                   
+#> [149] "Duartina"                   "Dumont"                    
+#> [151] "Echaporã"                   "Eldorado"                  
+#> [153] "Elias Fausto"               "Elisiário"                 
+#> [155] "Embaúba"                    "Embu-Guaçu"                
+#> [157] "Emilianópolis"              "Engenheiro Coelho"         
+#> [159] "Espírito Santo do Pinhal"   "Espírito Santo do Turvo"   
+#> [161] "Estiva Gerbi"               "Estrela d'Oeste"           
+#> [163] "Estrela do Norte"           "Euclides da Cunha Paulista"
+#> [165] "Fartura"                    "Fernando Prestes"          
+#> [167] "Fernandópolis"              "Fernão"                    
+#> [169] "Flora Rica"                 "Floreal"                   
+#> [171] "Florínia"                   "Flórida Paulista"          
+#> [173] "Gabriel Monteiro"           "Garça"                     
+#> [175] "Gastão Vidigal"             "Gavião Peixoto"            
+#> [177] "General Salgado"            "Getulina"                  
+#> [179] "Glicério"                   "Guaimbê"                   
+#> [181] "Guaiçara"                   "Guapiara"                  
+#> [183] "Guapiaçu"                   "Guaraci"                   
+#> [185] "Guarani d'Oeste"            "Guarantã"                  
+#> [187] "Guararapes"                 "Guararema"                 
+#> [189] "Guaratinguetá"              "Guaraçaí"                  
+#> [191] "Guareí"                     "Guariba"                   
+#> [193] "Guará"                      "Guatapará"                 
+#> [195] "Guaíra"                     "Guzolândia"                
+#> [197] "Gália"                      "Herculândia"               
+#> [199] "Holambra"                   "Iacanga"                   
+#> [201] "Iacri"                      "Iaras"                     
+#> [203] "Ibaté"                      "Ibirarema"                 
+#> [205] "Ibirá"                      "Ibitinga"                  
+#> [207] "Ibiúna"                     "Icém"                      
+#> [209] "Iepê"                       "Igarapava"                 
+#> [211] "Igaratá"                    "Igaraçu do Tietê"          
+#> [213] "Iguape"                     "Ilha Comprida"             
+#> [215] "Ilha Solteira"              "Ilhabela"                  
+#> [217] "Indaiatuba"                 "Indiana"                   
+#> [219] "Indiaporã"                  "Inúbia Paulista"           
+#> [221] "Ipaussu"                    "Iperó"                     
+#> [223] "Ipeúna"                     "Ipiguá"                    
+#> [225] "Iporanga"                   "Ipuã"                      
+#> [227] "Iracemápolis"               "Irapuru"                   
+#> [229] "Irapuã"                     "Itaberá"                   
+#> [231] "Itajobi"                    "Itaju"                     
+#> [233] "Itapecerica da Serra"       "Itapetininga"              
+#> [235] "Itapeva"                    "Itapira"                   
+#> [237] "Itapirapuã Paulista"        "Itaporanga"                
+#> [239] "Itapura"                    "Itapuí"                    
+#> [241] "Itararé"                    "Itariri"                   
+#> [243] "Itatiba"                    "Itatinga"                  
+#> [245] "Itaí"                       "Itaóca"                    
+#> [247] "Itirapina"                  "Itirapuã"                  
+#> [249] "Itobi"                      "Itupeva"                   
+#> [251] "Ituverava"                  "Itápolis"                  
+#> [253] "Jaborandi"                  "Jaboticabal"               
+#> [255] "Jaci"                       "Jacupiranga"               
+#> [257] "Jaguariúna"                 "Jales"                     
+#> [259] "Jambeiro"                   "Jandira"                   
+#> [261] "Jardinópolis"               "Jarinu"                    
+#> [263] "Jaú"                        "Jeriquara"                 
+#> [265] "Joanópolis"                 "José Bonifácio"            
+#> [267] "João Ramalho"               "Jumirim"                   
+#> [269] "Jundiaí"                    "Junqueirópolis"            
+#> [271] "Juquitiba"                  "Juquiá"                    
+#> [273] "Júlio Mesquita"             "Lagoinha"                  
+#> [275] "Laranjal Paulista"          "Lavrinhas"                 
+#> [277] "Lavínia"                    "Leme"                      
+#> [279] "Lençóis Paulista"           "Lindóia"                   
+#> [281] "Lins"                       "Lorena"                    
+#> [283] "Lourdes"                    "Louveira"                  
+#> [285] "Lucianópolis"               "Lucélia"                   
+#> [287] "Luiziânia"                  "Lupércio"                  
+#> [289] "Lutécia"                    "Luís Antônio"              
+#> [291] "Macatuba"                   "Macaubal"                  
+#> [293] "Macedônia"                  "Magda"                     
+#> [295] "Mairinque"                  "Mairiporã"                 
+#> [297] "Manduri"                    "Marabá Paulista"           
+#> [299] "Maracaí"                    "Marapoama"                 
+#> [301] "Marinópolis"                "Mariápolis"                
+#> [303] "Martinópolis"               "Matão"                     
+#> [305] "Mendonça"                   "Meridiano"                 
+#> [307] "Mesópolis"                  "Miguelópolis"              
+#> [309] "Mineiros do Tietê"          "Mira Estrela"              
+#> [311] "Miracatu"                   "Mirandópolis"              
+#> [313] "Mirante do Paranapanema"    "Mirassol"                  
+#> [315] "Mirassolândia"              "Mococa"                    
+#> [317] "Mogi Guaçu"                 "Mogi Mirim"                
+#> [319] "Mombuca"                    "Mongaguá"                  
+#> [321] "Monte Alegre do Sul"        "Monte Alto"                
+#> [323] "Monte Aprazível"            "Monte Azul Paulista"       
+#> [325] "Monte Castelo"              "Monte Mor"                 
+#> [327] "Monteiro Lobato"            "Monções"                   
+#> [329] "Morro Agudo"                "Morungaba"                 
+#> [331] "Motuca"                     "Murutinga do Sul"          
+#> [333] "Nantes"                     "Narandiba"                 
+#> [335] "Natividade da Serra"        "Nazaré Paulista"           
+#> [337] "Neves Paulista"             "Nhandeara"                 
+#> [339] "Nipoã"                      "Nova Aliança"              
+#> [341] "Nova Campina"               "Nova Canaã Paulista"       
+#> [343] "Nova Castilho"              "Nova Europa"               
+#> [345] "Nova Granada"               "Nova Guataporanga"         
+#> [347] "Nova Independência"         "Nova Luzitânia"            
+#> [349] "Nova Odessa"                "Novais"                    
+#> [351] "Novo Horizonte"             "Nuporanga"                 
+#> [353] "Ocauçu"                     "Olímpia"                   
+#> [355] "Onda Verde"                 "Oriente"                   
+#> [357] "Orindiúva"                  "Orlândia"                  
+#> [359] "Oscar Bressane"             "Osvaldo Cruz"              
+#> [361] "Ourinhos"                   "Ouro Verde"                
+#> [363] "Ouroeste"                   "Pacaembu"                  
+#> [365] "Palestina"                  "Palmares Paulista"         
+#> [367] "Palmeira d'Oeste"           "Palmital"                  
+#> [369] "Panorama"                   "Paraguaçu Paulista"        
+#> [371] "Paraibuna"                  "Paranapanema"              
+#> [373] "Paranapuã"                  "Parapuã"                   
+#> [375] "Paraíso"                    "Pardinho"                  
+#> [377] "Pariquera-Açu"              "Parisi"                    
+#> [379] "Patrocínio Paulista"        "Paulicéia"                 
+#> [381] "Paulistânia"                "Paulo de Faria"            
+#> [383] "Paulínia"                   "Pederneiras"               
+#> [385] "Pedra Bela"                 "Pedranópolis"              
+#> [387] "Pedregulho"                 "Pedreira"                  
+#> [389] "Pedrinhas Paulista"         "Pedro de Toledo"           
+#> [391] "Penápolis"                  "Pereira Barreto"           
+#> [393] "Pereiras"                   "Peruíbe"                   
+#> [395] "Piacatu"                    "Piedade"                   
+#> [397] "Pilar do Sul"               "Pindorama"                 
+#> [399] "Pinhalzinho"                "Piquerobi"                 
+#> [401] "Piquete"                    "Piracaia"                  
+#> [403] "Piraju"                     "Pirajuí"                   
+#> [405] "Pirangi"                    "Pirapora do Bom Jesus"     
+#> [407] "Pirapozinho"                "Pirassununga"              
+#> [409] "Piratininga"                "Pitangueiras"              
+#> [411] "Planalto"                   "Platina"                   
+#> [413] "Poloni"                     "Pompéia"                   
+#> [415] "Pongaí"                     "Pontal"                    
+#> [417] "Pontalinda"                 "Pontes Gestal"             
+#> [419] "Populina"                   "Porangaba"                 
+#> [421] "Porto Feliz"                "Porto Ferreira"            
+#> [423] "Potim"                      "Potirendaba"               
+#> [425] "Pracinha"                   "Pradópolis"                
+#> [427] "Pratânia"                   "Presidente Alves"          
+#> [429] "Presidente Bernardes"       "Presidente Epitácio"       
+#> [431] "Presidente Prudente"        "Presidente Venceslau"      
+#> [433] "Promissão"                  "Quadra"                    
+#> [435] "Quatá"                      "Queiroz"                   
+#> [437] "Queluz"                     "Quintana"                  
+#> [439] "Rafard"                     "Rancharia"                 
+#> [441] "Redenção da Serra"          "Regente Feijó"             
+#> [443] "Reginópolis"                "Registro"                  
+#> [445] "Restinga"                   "Ribeira"                   
+#> [447] "Ribeirão Bonito"            "Ribeirão Branco"           
+#> [449] "Ribeirão Corrente"          "Ribeirão Grande"           
+#> [451] "Ribeirão Pires"             "Ribeirão do Sul"           
+#> [453] "Ribeirão dos Índios"        "Rifaina"                   
+#> [455] "Rincão"                     "Rinópolis"                 
+#> [457] "Rio Claro"                  "Rio Grande da Serra"       
+#> [459] "Rio das Pedras"             "Riolândia"                 
+#> [461] "Riversul"                   "Rosana"                    
+#> [463] "Roseira"                    "Rubinéia"                  
+#> [465] "Rubiácea"                   "Sabino"                    
+#> [467] "Sagres"                     "Sales"                     
+#> [469] "Sales Oliveira"             "Salesópolis"               
+#> [471] "Salmourão"                  "Saltinho"                  
+#> [473] "Salto"                      "Salto Grande"              
+#> [475] "Salto de Pirapora"          "Sandovalina"               
+#> [477] "Santa Adélia"               "Santa Albertina"           
+#> [479] "Santa Branca"               "Santa Bárbara d'Oeste"     
+#> [481] "Santa Clara d'Oeste"        "Santa Cruz da Conceição"   
+#> [483] "Santa Cruz da Esperança"    "Santa Cruz das Palmeiras"  
+#> [485] "Santa Cruz do Rio Pardo"    "Santa Ernestina"           
+#> [487] "Santa Fé do Sul"            "Santa Gertrudes"           
+#> [489] "Santa Isabel"               "Santa Lúcia"               
+#> [491] "Santa Maria da Serra"       "Santa Mercedes"            
+#> [493] "Santa Rita d'Oeste"         "Santa Rita do Passa Quatro"
+#> [495] "Santa Rosa de Viterbo"      "Santa Salete"              
+#> [497] "Santana da Ponte Pensa"     "Santana de Parnaíba"       
+#> [499] "Santo Anastácio"            "Santo Antônio da Alegria"  
+#> [501] "Santo Antônio de Posse"     "Santo Antônio do Aracanguá"
+#> [503] "Santo Antônio do Jardim"    "Santo Antônio do Pinhal"   
+#> [505] "Santo Expedito"             "Santópolis do Aguapeí"     
+#> [507] "Sarapuí"                    "Sarutaiá"                  
+#> [509] "Sebastianópolis do Sul"     "Serra Azul"                
+#> [511] "Serra Negra"                "Serrana"                   
+#> [513] "Sertãozinho"                "Sete Barras"               
+#> [515] "Severínia"                  "Silveiras"                 
+#> [517] "Socorro"                    "Sud Mennucci"              
+#> [519] "Suzanápolis"                "São Bento do Sapucaí"      
+#> [521] "São Caetano do Sul"         "São Francisco"             
+#> [523] "São Joaquim da Barra"       "São José da Bela Vista"    
+#> [525] "São José do Barreiro"       "São José do Rio Pardo"     
+#> [527] "São João da Boa Vista"      "São João das Duas Pontes"  
+#> [529] "São João de Iracema"        "São João do Pau d'Alho"    
+#> [531] "São Lourenço da Serra"      "São Luís do Paraitinga"    
+#> [533] "São Manuel"                 "São Miguel Arcanjo"        
+#> [535] "São Pedro"                  "São Pedro do Turvo"        
+#> [537] "São Roque"                  "São Sebastião"             
+#> [539] "São Sebastião da Grama"     "São Simão"                 
+#> [541] "Tabapuã"                    "Tabatinga"                 
+#> [543] "Taciba"                     "Taguaí"                    
+#> [545] "Taiaçu"                     "Taiúva"                    
+#> [547] "Tambaú"                     "Tanabi"                    
+#> [549] "Tapiratiba"                 "Tapiraí"                   
+#> [551] "Taquaral"                   "Taquaritinga"              
+#> [553] "Taquarituba"                "Taquarivaí"                
+#> [555] "Tarabai"                    "Tarumã"                    
+#> [557] "Tatuí"                      "Taubaté"                   
+#> [559] "Tejupá"                     "Teodoro Sampaio"           
+#> [561] "Terra Roxa"                 "Tietê"                     
+#> [563] "Timburi"                    "Torre de Pedra"            
+#> [565] "Torrinha"                   "Trabiju"                   
+#> [567] "Tremembé"                   "Três Fronteiras"           
+#> [569] "Tuiuti"                     "Tupi Paulista"             
+#> [571] "Tupã"                       "Turiúba"                   
+#> [573] "Turmalina"                  "Ubarana"                   
+#> [575] "Ubatuba"                    "Ubirajara"                 
+#> [577] "Uchoa"                      "União Paulista"            
+#> [579] "Uru"                        "Urupês"                    
+#> [581] "Urânia"                     "Valentim Gentil"           
+#> [583] "Valinhos"                   "Valparaíso"                
+#> [585] "Vargem"                     "Vargem Grande Paulista"    
+#> [587] "Vargem Grande do Sul"       "Vera Cruz"                 
+#> [589] "Vinhedo"                    "Viradouro"                 
+#> [591] "Vista Alegre do Alto"       "Vitória Brasil"            
+#> [593] "Votorantim"                 "Votuporanga"               
+#> [595] "Várzea Paulista"            "Zacarias"                  
+#> [597] "Águas da Prata"             "Águas de Lindóia"          
+#> [599] "Águas de Santa Bárbara"     "Águas de São Pedro"        
+#> [601] "Álvares Florence"           "Álvares Machado"           
+#> [603] "Álvaro de Carvalho"         "Óleo"
+```
+
+#### Grupo 2:
+
+``` r
+nome[grupo == 2]
+#>  [1] "Barueri"               "Bauru"                 "Cajamar"              
+#>  [4] "Campinas"              "Carapicuíba"           "Diadema"              
+#>  [7] "Embu das Artes"        "Ferraz de Vasconcelos" "Franca"               
+#> [10] "Francisco Morato"      "Franco da Rocha"       "Guarujá"              
+#> [13] "Guarulhos"             "Hortolândia"           "Itanhaém"             
+#> [16] "Itapevi"               "Itaquaquecetuba"       "Itu"                  
+#> [19] "Jacareí"               "Limeira"               "Marília"              
+#> [22] "Mauá"                  "Mogi das Cruzes"       "Osasco"               
+#> [25] "Pindamonhangaba"       "Piracicaba"            "Poá"                  
+#> [28] "Praia Grande"          "Ribeirão Preto"        "Santo André"          
+#> [31] "Santos"                "Sorocaba"              "Sumaré"               
+#> [34] "Suzano"                "São Bernardo do Campo" "São Carlos"           
+#> [37] "São José do Rio Preto" "São José dos Campos"   "São Vicente"          
+#> [40] "Taboão da Serra"
+```
+
+#### Grupo 3:
+
+``` r
+nome[grupo == 3]
+#> [1] "São Paulo"
 ```
 
 ------------------------------------------------------------------------
@@ -285,7 +644,7 @@ lavouras %>%
   theme(axis.text.x = element_text(angle = 90, hjust=1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ``` r
 lavouras <- lavouras %>% 
@@ -346,7 +705,7 @@ tabe_lavouras %>%
         axis.title.y.right = element_text(color = "red"))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 ``` r
 tabe_lavouras %>% 
@@ -363,7 +722,7 @@ tabe_lavouras %>%
         axis.title.y.right = element_text(color = "red"))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 ``` r
 tabe_lavouras %>% 
@@ -380,7 +739,7 @@ tabe_lavouras %>%
         axis.title.y.right = element_text(color = "red"))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 ``` r
 tabe_lavouras %>% 
@@ -397,7 +756,7 @@ tabe_lavouras %>%
         axis.title.y.right = element_text(color = "red"))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
 
 ``` r
 tabe_lavouras %>% 
@@ -414,7 +773,7 @@ tabe_lavouras %>%
         axis.title.y.right = element_text(color = "red"))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 #### Tabela de Dados
 
@@ -465,18 +824,17 @@ data_set_muni <- left_join(data_set_muni,
 #### Agrupamento e Correlação
 
 ``` r
-nomes <- lavouras_resu$nome
 da <- lavouras_resu
 da_pad <- decostand(da[-1] , 
                       method = "standardize",
                       na.rm=TRUE)
 df <- da_pad %>% 
   drop_na()
-
+nome <- da %>% drop_na() %>%  pull(nome)
 visdat::vis_miss(da_pad)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
 ``` r
 da_pad_euc<-vegdist(df,"euclidean",na.rm=TRUE) 
@@ -488,7 +846,7 @@ plot(da_pad_euc_ward,
      cex=.6,lwd=1.5);box()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
 ``` r
 grupo<-cutree(da_pad_euc_ward,3)
@@ -499,7 +857,7 @@ cor_matrix <- cor(df, use = "na.or.complete")
 corrplot(cor_matrix, method="ellipse")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
 ``` r
 pca <-  prcomp(df,
@@ -517,14 +875,14 @@ mcor<-cor(df,pca$x)
 corrplot(mcor)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
 
 ``` r
 screeplot(pca)
 abline(h=1)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-29-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-33-2.png)<!-- -->
 
 ``` r
 pc1V<-cor(df,pca$x)[,1]/sd(cor(df,pca$x)[,1])
@@ -537,13 +895,16 @@ nv<-ncol(df)
 ```
 
 ``` r
-bip<-data.frame(pc1c,pc2c,pc3c)#,nome)
+bip<-data.frame(pc1c,pc2c,pc3c,nome,grupo=as.factor(grupo))
 texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
 )
 
 bip %>% 
   ggplot(aes(x=pc1c, y=pc2c))+
   geom_point() +
+  geom_point(aes(shape = grupo, color = grupo), size = 3) + theme_minimal()+
+  scale_shape_manual(values=16:18)+
+  scale_color_manual(values=c("#009E73","#D55E00", "#A6761D"))+
   geom_vline(aes(xintercept=0),
              color="black", size=1) +
   geom_hline(aes(yintercept=0),
@@ -561,7 +922,7 @@ bip %>%
   theme(legend.position = "top")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
 
 ``` r
 ck<-sum(pca$sdev^2>=0.98)
@@ -582,6 +943,339 @@ print(tabelapca)
 #> npper        -0.78002635  0.42353001  0.083150131  0.09287658
 #> pacolhidaper  0.81619937 -0.50057565 -0.009783809 -0.01309159
 #> pvalorpper    0.81677853 -0.49899389 -0.009769515 -0.01181416
+```
+
+``` r
+df_grupo <- data.frame(nome, grupo)
+df_nomes <- read_rds("data/df_nome.rds")
+df_grupo <- left_join(df_grupo,df_nomes %>% select(id_municipio, nome) ,by ="nome")
+d_sf_municipio <- st_read("shp/35MUE250GC_SIR.shp", quiet = TRUE)
+d_sf_municipio <- d_sf_municipio %>%
+  rename(id_municipio = CD_GEOCMU) %>%
+  inner_join(df_grupo %>%
+               relocate(id_municipio), "id_municipio") %>% 
+  mutate(grupo = as.factor(grupo))
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = grupo))+
+  theme_minimal() +
+  scale_fill_viridis_d()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-36-1.png)<!-- --> \#### Grupo
+1:
+
+``` r
+nome[grupo == 1]
+#>   [1] "Adamantina"               "Adolfo"                  
+#>   [3] "Aguaí"                    "Alfredo Marcondes"       
+#>   [5] "Altinópolis"              "Alto Alegre"             
+#>   [7] "Alvinlândia"              "Amparo"                  
+#>   [9] "Angatuba"                 "Apiaí"                   
+#>  [11] "Arealva"                  "Atibaia"                 
+#>  [13] "Avaré"                    "Bady Bassitt"            
+#>  [15] "Bariri"                   "Barra do Turvo"          
+#>  [17] "Barretos"                 "Batatais"                
+#>  [19] "Bauru"                    "Bebedouro"               
+#>  [21] "Boa Esperança do Sul"     "Borborema"               
+#>  [23] "Botucatu"                 "Bragança Paulista"       
+#>  [25] "Brotas"                   "Buri"                    
+#>  [27] "Bálsamo"                  "Caconde"                 
+#>  [29] "Cafelândia"               "Caiuá"                   
+#>  [31] "Cajati"                   "Campinas"                
+#>  [33] "Cananéia"                 "Capão Bonito"            
+#>  [35] "Casa Branca"              "Cedral"                  
+#>  [37] "Clementina"               "Colômbia"                
+#>  [39] "Conchal"                  "Coroados"                
+#>  [41] "Corumbataí"               "Cristais Paulista"       
+#>  [43] "Cândido Mota"             "Cândido Rodrigues"       
+#>  [45] "Dracena"                  "Duartina"                
+#>  [47] "Echaporã"                 "Eldorado"                
+#>  [49] "Embaúba"                  "Espírito Santo do Pinhal"
+#>  [51] "Fernando Prestes"         "Fernão"                  
+#>  [53] "Flora Rica"               "Flórida Paulista"        
+#>  [55] "Franca"                   "Gabriel Monteiro"        
+#>  [57] "Garça"                    "Guaimbê"                 
+#>  [59] "Guapiara"                 "Guapiaçu"                
+#>  [61] "Guaíra"                   "Gália"                   
+#>  [63] "Iacri"                    "Iaras"                   
+#>  [65] "Ibitinga"                 "Ibiúna"                  
+#>  [67] "Iguape"                   "Ilha Solteira"           
+#>  [69] "Indiana"                  "Irapuru"                 
+#>  [71] "Irapuã"                   "Itaberá"                 
+#>  [73] "Itajobi"                  "Itaju"                   
+#>  [75] "Itapetininga"             "Itapeva"                 
+#>  [77] "Itapira"                  "Itararé"                 
+#>  [79] "Itatiba"                  "Itaí"                    
+#>  [81] "Itápolis"                 "Jaboticabal"             
+#>  [83] "Jaci"                     "Jacupiranga"             
+#>  [85] "Jales"                    "Jardinópolis"            
+#>  [87] "Joanópolis"               "José Bonifácio"          
+#>  [89] "Jundiaí"                  "Junqueirópolis"          
+#>  [91] "Juquiá"                   "Limeira"                 
+#>  [93] "Louveira"                 "Lucianópolis"            
+#>  [95] "Lucélia"                  "Lupércio"                
+#>  [97] "Macaubal"                 "Mairinque"               
+#>  [99] "Maracaí"                  "Mariápolis"              
+#> [101] "Marília"                  "Matão"                   
+#> [103] "Mendonça"                 "Miguelópolis"            
+#> [105] "Mineiros do Tietê"        "Mirandópolis"            
+#> [107] "Mirassol"                 "Mococa"                  
+#> [109] "Mogi Guaçu"               "Mogi Mirim"              
+#> [111] "Monte Alegre do Sul"      "Monte Alto"              
+#> [113] "Monte Aprazível"          "Monte Azul Paulista"     
+#> [115] "Monte Castelo"            "Morro Agudo"             
+#> [117] "Motuca"                   "Murutinga do Sul"        
+#> [119] "Nazaré Paulista"          "Neves Paulista"          
+#> [121] "Nova Aliança"             "Novo Horizonte"          
+#> [123] "Ocauçu"                   "Olímpia"                 
+#> [125] "Osvaldo Cruz"             "Pacaembu"                
+#> [127] "Palmital"                 "Paraguaçu Paulista"      
+#> [129] "Paranapanema"             "Parapuã"                 
+#> [131] "Paraíso"                  "Pariquera-Açu"           
+#> [133] "Pederneiras"              "Pedra Bela"              
+#> [135] "Pedregulho"               "Pedreira"                
+#> [137] "Piedade"                  "Pilar do Sul"            
+#> [139] "Pindamonhangaba"          "Pindorama"               
+#> [141] "Pinhalzinho"              "Piracaia"                
+#> [143] "Piracicaba"               "Pirangi"                 
+#> [145] "Pirassununga"             "Piratininga"             
+#> [147] "Pongaí"                   "Pontalinda"              
+#> [149] "Porto Feliz"              "Porto Ferreira"          
+#> [151] "Potirendaba"              "Pradópolis"              
+#> [153] "Presidente Epitácio"      "Presidente Venceslau"    
+#> [155] "Rancharia"                "Registro"                
+#> [157] "Ribeirão Branco"          "Ribeirão Grande"         
+#> [159] "Rio Claro"                "Salmourão"               
+#> [161] "Salto de Pirapora"        "Santa Branca"            
+#> [163] "Santa Clara d'Oeste"      "Santa Cruz do Rio Pardo" 
+#> [165] "Santa Mercedes"           "Santo Antônio de Posse"  
+#> [167] "Santo Antônio do Pinhal"  "Sete Barras"             
+#> [169] "Socorro"                  "Suzanápolis"             
+#> [171] "São Bento do Sapucaí"     "São Carlos"              
+#> [173] "São José da Bela Vista"   "São José do Rio Preto"   
+#> [175] "São João da Boa Vista"    "São Miguel Arcanjo"      
+#> [177] "São Pedro do Turvo"       "São Roque"               
+#> [179] "Tabatinga"                "Taiaçu"                  
+#> [181] "Tambaú"                   "Tanabi"                  
+#> [183] "Taquaritinga"             "Taquarituba"             
+#> [185] "Taquarivaí"               "Tupi Paulista"           
+#> [187] "Tupã"                     "Ubirajara"               
+#> [189] "Urupês"                   "Urânia"                  
+#> [191] "Valinhos"                 "Vargem"                  
+#> [193] "Vera Cruz"                "Vinhedo"                 
+#> [195] "Vista Alegre do Alto"     "Vitória Brasil"          
+#> [197] "Álvares Florence"         "Álvares Machado"         
+#> [199] "Álvaro de Carvalho"
+```
+
+#### Grupo 2:
+
+``` r
+nome[grupo == 2]
+#>   [1] "Agudos"                     "Alambari"                  
+#>   [3] "Altair"                     "Alumínio"                  
+#>   [5] "Américo Brasiliense"        "Américo de Campos"         
+#>   [7] "Analândia"                  "Andradina"                 
+#>   [9] "Anhembi"                    "Aparecida d'Oeste"         
+#>  [11] "Arandu"                     "Arapeí"                    
+#>  [13] "Araraquara"                 "Araras"                    
+#>  [15] "Araçariguama"               "Araçatuba"                 
+#>  [17] "Araçoiaba da Serra"         "Arco-Íris"                 
+#>  [19] "Ariranha"                   "Artur Nogueira"            
+#>  [21] "Aspásia"                    "Assis"                     
+#>  [23] "Auriflama"                  "Avanhandava"               
+#>  [25] "Avaí"                       "Balbinos"                  
+#>  [27] "Bananal"                    "Barra do Chapéu"           
+#>  [29] "Barão de Antonina"          "Bastos"                    
+#>  [31] "Bernardino de Campos"       "Bilac"                     
+#>  [33] "Birigui"                    "Bocaina"                   
+#>  [35] "Bofete"                     "Boituva"                   
+#>  [37] "Bom Sucesso de Itararé"     "Borebi"                    
+#>  [39] "Braúna"                     "Brejo Alegre"              
+#>  [41] "Brodowski"                  "Cabreúva"                  
+#>  [43] "Cabrália Paulista"          "Cachoeira Paulista"        
+#>  [45] "Caiabu"                     "Cajobi"                    
+#>  [47] "Cajuru"                     "Campina do Monte Alegre"   
+#>  [49] "Campos Novos Paulista"      "Capela do Alto"            
+#>  [51] "Cardoso"                    "Catanduva"                 
+#>  [53] "Catiguá"                    "Caçapava"                  
+#>  [55] "Cerqueira César"            "Cesário Lange"             
+#>  [57] "Charqueada"                 "Colina"                    
+#>  [59] "Conchas"                    "Cordeirópolis"             
+#>  [61] "Coronel Macedo"             "Cosmorama"                 
+#>  [63] "Cosmópolis"                 "Cravinhos"                 
+#>  [65] "Cruzeiro"                   "Cássia dos Coqueiros"      
+#>  [67] "Descalvado"                 "Dirce Reis"                
+#>  [69] "Divinolândia"               "Dobrada"                   
+#>  [71] "Dois Córregos"              "Dolcinópolis"              
+#>  [73] "Elias Fausto"               "Elisiário"                 
+#>  [75] "Engenheiro Coelho"          "Espírito Santo do Turvo"   
+#>  [77] "Estiva Gerbi"               "Estrela d'Oeste"           
+#>  [79] "Fartura"                    "Fernandópolis"             
+#>  [81] "Floreal"                    "Gastão Vidigal"            
+#>  [83] "Gavião Peixoto"             "General Salgado"           
+#>  [85] "Getulina"                   "Glicério"                  
+#>  [87] "Guaiçara"                   "Guaraci"                   
+#>  [89] "Guarani d'Oeste"            "Guarantã"                  
+#>  [91] "Guararapes"                 "Guararema"                 
+#>  [93] "Guaraçaí"                   "Guareí"                    
+#>  [95] "Guariba"                    "Guará"                     
+#>  [97] "Guatapará"                  "Guzolândia"                
+#>  [99] "Herculândia"                "Holambra"                  
+#> [101] "Iacanga"                    "Ibaté"                     
+#> [103] "Ibirá"                      "Icém"                      
+#> [105] "Igarapava"                  "Indaiatuba"                
+#> [107] "Indiaporã"                  "Inúbia Paulista"           
+#> [109] "Ipaussu"                    "Iperó"                     
+#> [111] "Ipeúna"                     "Ipiguá"                    
+#> [113] "Iporanga"                   "Iracemápolis"              
+#> [115] "Itapirapuã Paulista"        "Itaporanga"                
+#> [117] "Itapura"                    "Itapuí"                    
+#> [119] "Itatinga"                   "Itaóca"                    
+#> [121] "Itirapina"                  "Itirapuã"                  
+#> [123] "Itobi"                      "Itu"                       
+#> [125] "Itupeva"                    "Ituverava"                 
+#> [127] "Jacareí"                    "Jaguariúna"                
+#> [129] "Jarinu"                     "Jaú"                       
+#> [131] "Jeriquara"                  "Júlio Mesquita"            
+#> [133] "Lavínia"                    "Leme"                      
+#> [135] "Lençóis Paulista"           "Lindóia"                   
+#> [137] "Lins"                       "Luiziânia"                 
+#> [139] "Lutécia"                    "Luís Antônio"              
+#> [141] "Macedônia"                  "Magda"                     
+#> [143] "Manduri"                    "Marabá Paulista"           
+#> [145] "Marapoama"                  "Marinópolis"               
+#> [147] "Martinópolis"               "Meridiano"                 
+#> [149] "Mesópolis"                  "Mira Estrela"              
+#> [151] "Mirante do Paranapanema"    "Mirassolândia"             
+#> [153] "Mogi das Cruzes"            "Mombuca"                   
+#> [155] "Monções"                    "Morungaba"                 
+#> [157] "Nantes"                     "Narandiba"                 
+#> [159] "Nhandeara"                  "Nipoã"                     
+#> [161] "Nova Campina"               "Nova Canaã Paulista"       
+#> [163] "Nova Castilho"              "Nova Europa"               
+#> [165] "Nova Granada"               "Nova Guataporanga"         
+#> [167] "Novais"                     "Nuporanga"                 
+#> [169] "Onda Verde"                 "Oriente"                   
+#> [171] "Orindiúva"                  "Orlândia"                  
+#> [173] "Oscar Bressane"             "Ouro Verde"                
+#> [175] "Ouroeste"                   "Palestina"                 
+#> [177] "Palmares Paulista"          "Palmeira d'Oeste"          
+#> [179] "Panorama"                   "Paranapuã"                 
+#> [181] "Pardinho"                   "Parisi"                    
+#> [183] "Patrocínio Paulista"        "Paulicéia"                 
+#> [185] "Paulistânia"                "Paulo de Faria"            
+#> [187] "Paulínia"                   "Pedranópolis"              
+#> [189] "Penápolis"                  "Pereira Barreto"           
+#> [191] "Piacatu"                    "Piquerobi"                 
+#> [193] "Piraju"                     "Pirajuí"                   
+#> [195] "Pirapozinho"                "Pitangueiras"              
+#> [197] "Planalto"                   "Platina"                   
+#> [199] "Poloni"                     "Pompéia"                   
+#> [201] "Pontes Gestal"              "Populina"                  
+#> [203] "Pracinha"                   "Pratânia"                  
+#> [205] "Presidente Alves"           "Presidente Bernardes"      
+#> [207] "Presidente Prudente"        "Promissão"                 
+#> [209] "Quadra"                     "Quatá"                     
+#> [211] "Queluz"                     "Quintana"                  
+#> [213] "Regente Feijó"              "Reginópolis"               
+#> [215] "Restinga"                   "Ribeira"                   
+#> [217] "Ribeirão Bonito"            "Ribeirão Corrente"         
+#> [219] "Ribeirão Preto"             "Ribeirão do Sul"           
+#> [221] "Rincão"                     "Rinópolis"                 
+#> [223] "Riolândia"                  "Riversul"                  
+#> [225] "Rosana"                     "Rubinéia"                  
+#> [227] "Sabino"                     "Sagres"                    
+#> [229] "Sales"                      "Sales Oliveira"            
+#> [231] "Salesópolis"                "Saltinho"                  
+#> [233] "Salto Grande"               "Santa Adélia"              
+#> [235] "Santa Albertina"            "Santa Cruz da Conceição"   
+#> [237] "Santa Cruz das Palmeiras"   "Santa Ernestina"           
+#> [239] "Santa Fé do Sul"            "Santa Gertrudes"           
+#> [241] "Santa Maria da Serra"       "Santa Rita d'Oeste"        
+#> [243] "Santa Rita do Passa Quatro" "Santa Rosa de Viterbo"     
+#> [245] "Santa Salete"               "Santana da Ponte Pensa"    
+#> [247] "Santo Anastácio"            "Santo Antônio da Alegria"  
+#> [249] "Santo Antônio do Aracanguá" "Santópolis do Aguapeí"     
+#> [251] "Sarapuí"                    "Sarutaiá"                  
+#> [253] "Sebastianópolis do Sul"     "Serra Negra"               
+#> [255] "Severínia"                  "Silveiras"                 
+#> [257] "Sorocaba"                   "Sud Mennucci"              
+#> [259] "Sumaré"                     "São Francisco"             
+#> [261] "São José do Barreiro"       "São José do Rio Pardo"     
+#> [263] "São João das Duas Pontes"   "São João de Iracema"       
+#> [265] "São João do Pau d'Alho"     "São Luís do Paraitinga"    
+#> [267] "São Manuel"                 "São Pedro"                 
+#> [269] "São Sebastião da Grama"     "São Simão"                 
+#> [271] "Tabapuã"                    "Taciba"                    
+#> [273] "Taiúva"                     "Tapiratiba"                
+#> [275] "Taquaral"                   "Tatuí"                     
+#> [277] "Tejupá"                     "Teodoro Sampaio"           
+#> [279] "Terra Roxa"                 "Tietê"                     
+#> [281] "Timburi"                    "Torrinha"                  
+#> [283] "Trabiju"                    "Três Fronteiras"           
+#> [285] "Tuiuti"                     "Turmalina"                 
+#> [287] "Ubarana"                    "Uchoa"                     
+#> [289] "União Paulista"             "Uru"                       
+#> [291] "Valentim Gentil"            "Valparaíso"                
+#> [293] "Vargem Grande do Sul"       "Viradouro"                 
+#> [295] "Votuporanga"                "Zacarias"                  
+#> [297] "Águas da Prata"             "Águas de Lindóia"          
+#> [299] "Águas de Santa Bárbara"
+```
+
+#### Grupo 3:
+
+``` r
+nome[grupo == 3]
+#>  [1] "Anhumas"                    "Aramina"                   
+#>  [3] "Areias"                     "Areiópolis"                
+#>  [5] "Barbosa"                    "Barra Bonita"              
+#>  [7] "Bento de Abreu"             "Biritiba-Mirim"            
+#>  [9] "Bom Jesus dos Perdões"      "Boracéia"                  
+#> [11] "Buritama"                   "Buritizal"                 
+#> [13] "Cajamar"                    "Campos do Jordão"          
+#> [15] "Canas"                      "Canitar"                   
+#> [17] "Capivari"                   "Caraguatatuba"             
+#> [19] "Castilho"                   "Cerquilho"                 
+#> [21] "Chavantes"                  "Cruzália"                  
+#> [23] "Dourado"                    "Dumont"                    
+#> [25] "Embu-Guaçu"                 "Emilianópolis"             
+#> [27] "Estrela do Norte"           "Euclides da Cunha Paulista"
+#> [29] "Florínia"                   "Franco da Rocha"           
+#> [31] "Guaratinguetá"              "Guarujá"                   
+#> [33] "Ibirarema"                  "Iepê"                      
+#> [35] "Igaratá"                    "Ilhabela"                  
+#> [37] "Itanhaém"                   "Itariri"                   
+#> [39] "Jaborandi"                  "Jambeiro"                  
+#> [41] "João Ramalho"               "Jumirim"                   
+#> [43] "Lagoinha"                   "Laranjal Paulista"         
+#> [45] "Lavrinhas"                  "Lourdes"                   
+#> [47] "Macatuba"                   "Miracatu"                  
+#> [49] "Monte Mor"                  "Monteiro Lobato"           
+#> [51] "Natividade da Serra"        "Nova Independência"        
+#> [53] "Nova Luzitânia"             "Nova Odessa"               
+#> [55] "Ourinhos"                   "Paraibuna"                 
+#> [57] "Pedrinhas Paulista"         "Pedro de Toledo"           
+#> [59] "Peruíbe"                    "Piquete"                   
+#> [61] "Porangaba"                  "Queiroz"                   
+#> [63] "Rafard"                     "Redenção da Serra"         
+#> [65] "Ribeirão dos Índios"        "Rifaina"                   
+#> [67] "Rio das Pedras"             "Roseira"                   
+#> [69] "Rubiácea"                   "Salto"                     
+#> [71] "Sandovalina"                "Santa Bárbara d'Oeste"     
+#> [73] "Santa Cruz da Esperança"    "Santa Isabel"              
+#> [75] "Santa Lúcia"                "Santo Antônio do Jardim"   
+#> [77] "Santo Expedito"             "Serra Azul"                
+#> [79] "Serrana"                    "Sertãozinho"               
+#> [81] "São Joaquim da Barra"       "São José dos Campos"       
+#> [83] "São Paulo"                  "São Sebastião"             
+#> [85] "Taguaí"                     "Tapiraí"                   
+#> [87] "Tarabai"                    "Tarumã"                    
+#> [89] "Taubaté"                    "Torre de Pedra"            
+#> [91] "Tremembé"                   "Turiúba"                   
+#> [93] "Ubatuba"                    "Votorantim"                
+#> [95] "Óleo"
 ```
 
 ------------------------------------------------------------------------
@@ -626,7 +1320,7 @@ pnae_recurso <- pnae_recurso %>%
 visdat::vis_miss(pnae_recurso)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
 
 ### Visualização de dados
 
@@ -661,7 +1355,7 @@ tab_pane %>%
         axis.title.y.right = element_text(color = "red"))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
 
 #### Tabela de Dados
 
@@ -740,11 +1434,11 @@ da_pad <- decostand(da[-1] ,
                       na.rm=TRUE)
 df <- da_pad %>% 
   drop_na()
-
+nome <- da %>%  drop_na() %>%  pull(nome)
 visdat::vis_miss(da_pad)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-48-1.png)<!-- -->
 
 ``` r
 da_pad_euc<-vegdist(df,"euclidean",na.rm=TRUE) 
@@ -756,7 +1450,7 @@ plot(da_pad_euc_ward,
      cex=.6,lwd=1.5);box()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-49-1.png)<!-- -->
 
 ``` r
 grupo<-cutree(da_pad_euc_ward,3)
@@ -767,7 +1461,7 @@ cor_matrix <- cor(df, use = "na.or.complete")
 corrplot(cor_matrix, method="ellipse")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-50-1.png)<!-- -->
 
 ``` r
 pca <-  prcomp(df,
@@ -785,14 +1479,14 @@ mcor<-cor(df,pca$x)
 corrplot(mcor)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-43-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-51-1.png)<!-- -->
 
 ``` r
 screeplot(pca)
 abline(h=1)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-43-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-51-2.png)<!-- -->
 
 ``` r
 pc1V<-cor(df,pca$x)[,1]/sd(cor(df,pca$x)[,1])
@@ -805,13 +1499,16 @@ nv<-ncol(df)
 ```
 
 ``` r
-bip<-data.frame(pc1c,pc2c,pc3c)#,nome)
+bip<-data.frame(pc1c,pc2c,pc3c,nome,grupo=as.factor(grupo))
 texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
 )
 
 bip %>% 
   ggplot(aes(x=pc1c, y=pc2c))+
   geom_point() +
+  geom_point(aes(shape = grupo, color = grupo), size = 3) + theme_minimal()+
+  scale_shape_manual(values=16:18)+
+  scale_color_manual(values=c("#009E73","#D55E00", "#A6761D"))+
   geom_vline(aes(xintercept=0),
              color="black", size=1) +
   geom_hline(aes(yintercept=0),
@@ -829,7 +1526,7 @@ bip %>%
   theme(legend.position = "top")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-52-1.png)<!-- -->
 
 ``` r
 ck<-sum(pca$sdev^2>=0.98)
@@ -845,7 +1542,253 @@ print(tabelapca)
 #>      0.9945879      0.9945986      0.9965005      0.9966803      0.9973557
 ```
 
-Alta correlação
+``` r
+df_grupo <- data.frame(nome, grupo)
+df_nomes <- read_rds("data/df_nome.rds")
+df_grupo <- left_join(df_grupo,df_nomes %>% select(id_municipio, nome) ,by ="nome")
+d_sf_municipio <- st_read("shp/35MUE250GC_SIR.shp", quiet = TRUE)
+d_sf_municipio <- d_sf_municipio %>%
+  rename(id_municipio = CD_GEOCMU) %>%
+  inner_join(df_grupo %>%
+               relocate(id_municipio), "id_municipio") %>% 
+  mutate(grupo = as.factor(grupo))
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = grupo))+
+  theme_minimal() +
+  scale_fill_viridis_d()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-54-1.png)<!-- --> \#### Grupo
+1:
+
+``` r
+nome[grupo == 1]
+#>   [1] "Adamantina"                 "Aguaí"                     
+#>   [3] "Agudos"                     "Altair"                    
+#>   [5] "Altinópolis"                "Alumínio"                  
+#>   [7] "Alvinlândia"                "Amparo"                    
+#>   [9] "Américo Brasiliense"        "Américo de Campos"         
+#>  [11] "Andradina"                  "Angatuba"                  
+#>  [13] "Aparecida"                  "Apiaí"                     
+#>  [15] "Arandu"                     "Araçariguama"              
+#>  [17] "Arealva"                    "Areiópolis"                
+#>  [19] "Ariranha"                   "Artur Nogueira"            
+#>  [21] "Arujá"                      "Assis"                     
+#>  [23] "Auriflama"                  "Avanhandava"               
+#>  [25] "Bady Bassitt"               "Balbinos"                  
+#>  [27] "Barbosa"                    "Bariri"                    
+#>  [29] "Barra Bonita"               "Barrinha"                  
+#>  [31] "Bastos"                     "Batatais"                  
+#>  [33] "Bebedouro"                  "Bernardino de Campos"      
+#>  [35] "Bertioga"                   "Bilac"                     
+#>  [37] "Birigui"                    "Biritiba-Mirim"            
+#>  [39] "Bofete"                     "Boituva"                   
+#>  [41] "Bom Jesus dos Perdões"      "Borborema"                 
+#>  [43] "Braúna"                     "Brodowski"                 
+#>  [45] "Brotas"                     "Buri"                      
+#>  [47] "Buritama"                   "Buritizal"                 
+#>  [49] "Cachoeira Paulista"         "Caieiras"                  
+#>  [51] "Caiuá"                      "Cajati"                    
+#>  [53] "Cajobi"                     "Cajuru"                    
+#>  [55] "Campina do Monte Alegre"    "Campo Limpo Paulista"      
+#>  [57] "Campos do Jordão"           "Canas"                     
+#>  [59] "Canitar"                    "Capela do Alto"            
+#>  [61] "Capivari"                   "Capão Bonito"              
+#>  [63] "Cardoso"                    "Casa Branca"               
+#>  [65] "Castilho"                   "Catiguá"                   
+#>  [67] "Caçapava"                   "Cedral"                    
+#>  [69] "Cerqueira César"            "Cerquilho"                 
+#>  [71] "Charqueada"                 "Chavantes"                 
+#>  [73] "Colina"                     "Colômbia"                  
+#>  [75] "Conchal"                    "Conchas"                   
+#>  [77] "Cordeirópolis"              "Coroados"                  
+#>  [79] "Corumbataí"                 "Cosmorama"                 
+#>  [81] "Cristais Paulista"          "Cruzeiro"                  
+#>  [83] "Cássia dos Coqueiros"       "Cândido Mota"              
+#>  [85] "Descalvado"                 "Divinolândia"              
+#>  [87] "Dobrada"                    "Dois Córregos"             
+#>  [89] "Dracena"                    "Dumont"                    
+#>  [91] "Echaporã"                   "Eldorado"                  
+#>  [93] "Elias Fausto"               "Embu-Guaçu"                
+#>  [95] "Emilianópolis"              "Engenheiro Coelho"         
+#>  [97] "Espírito Santo do Pinhal"   "Espírito Santo do Turvo"   
+#>  [99] "Estiva Gerbi"               "Estrela d'Oeste"           
+#> [101] "Euclides da Cunha Paulista" "Fartura"                   
+#> [103] "Fernando Prestes"           "Fernandópolis"             
+#> [105] "Flórida Paulista"           "Garça"                     
+#> [107] "Gavião Peixoto"             "General Salgado"           
+#> [109] "Getulina"                   "Glicério"                  
+#> [111] "Guaimbê"                    "Guapiara"                  
+#> [113] "Guapiaçu"                   "Guaraci"                   
+#> [115] "Guararapes"                 "Guareí"                    
+#> [117] "Guariba"                    "Guará"                     
+#> [119] "Guatapará"                  "Guaíra"                    
+#> [121] "Guzolândia"                 "Gália"                     
+#> [123] "Holambra"                   "Iacanga"                   
+#> [125] "Iaras"                      "Ibaté"                     
+#> [127] "Ibirarema"                  "Ibirá"                     
+#> [129] "Ibiúna"                     "Icém"                      
+#> [131] "Iepê"                       "Igarapava"                 
+#> [133] "Igaratá"                    "Igaraçu do Tietê"          
+#> [135] "Iguape"                     "Ilha Comprida"             
+#> [137] "Ilha Solteira"              "Ilhabela"                  
+#> [139] "Indiaporã"                  "Inúbia Paulista"           
+#> [141] "Ipaussu"                    "Iperó"                     
+#> [143] "Ipeúna"                     "Ipuã"                      
+#> [145] "Iracemápolis"               "Irapuã"                    
+#> [147] "Itaberá"                    "Itajobi"                   
+#> [149] "Itapira"                    "Itaporanga"                
+#> [151] "Itapura"                    "Itapuí"                    
+#> [153] "Itararé"                    "Itariri"                   
+#> [155] "Itatiba"                    "Itatinga"                  
+#> [157] "Itaí"                       "Itirapuã"                  
+#> [159] "Ituverava"                  "Itápolis"                  
+#> [161] "Jaboticabal"                "Jacupiranga"               
+#> [163] "Jaguariúna"                 "Jales"                     
+#> [165] "Jandira"                    "Jardinópolis"              
+#> [167] "Jarinu"                     "Joanópolis"                
+#> [169] "José Bonifácio"             "Jumirim"                   
+#> [171] "Junqueirópolis"             "Juquitiba"                 
+#> [173] "Juquiá"                     "Lagoinha"                  
+#> [175] "Laranjal Paulista"          "Lavínia"                   
+#> [177] "Leme"                       "Lençóis Paulista"          
+#> [179] "Lindóia"                    "Lins"                      
+#> [181] "Lorena"                     "Lourdes"                   
+#> [183] "Lucélia"                    "Luís Antônio"              
+#> [185] "Macatuba"                   "Macedônia"                 
+#> [187] "Mairiporã"                  "Manduri"                   
+#> [189] "Maracaí"                    "Marinópolis"               
+#> [191] "Martinópolis"               "Matão"                     
+#> [193] "Mendonça"                   "Meridiano"                 
+#> [195] "Mesópolis"                  "Miguelópolis"              
+#> [197] "Mineiros do Tietê"          "Miracatu"                  
+#> [199] "Mirandópolis"               "Mirante do Paranapanema"   
+#> [201] "Mirassol"                   "Mococa"                    
+#> [203] "Monte Alto"                 "Monte Aprazível"           
+#> [205] "Monte Azul Paulista"        "Monte Mor"                 
+#> [207] "Monteiro Lobato"            "Morro Agudo"               
+#> [209] "Motuca"                     "Murutinga do Sul"          
+#> [211] "Narandiba"                  "Nazaré Paulista"           
+#> [213] "Nhandeara"                  "Nova Campina"              
+#> [215] "Nova Granada"               "Nova Guataporanga"         
+#> [217] "Nova Independência"         "Nova Odessa"               
+#> [219] "Novais"                     "Novo Horizonte"            
+#> [221] "Ocauçu"                     "Olímpia"                   
+#> [223] "Onda Verde"                 "Orlândia"                  
+#> [225] "Oscar Bressane"             "Osvaldo Cruz"              
+#> [227] "Ouro Verde"                 "Ouroeste"                  
+#> [229] "Pacaembu"                   "Palestina"                 
+#> [231] "Palmares Paulista"          "Palmeira d'Oeste"          
+#> [233] "Palmital"                   "Panorama"                  
+#> [235] "Paraguaçu Paulista"         "Paraibuna"                 
+#> [237] "Paranapanema"               "Paranapuã"                 
+#> [239] "Parapuã"                    "Pariquera-Açu"             
+#> [241] "Patrocínio Paulista"        "Paulicéia"                 
+#> [243] "Paulo de Faria"             "Pederneiras"               
+#> [245] "Pedra Bela"                 "Pedregulho"                
+#> [247] "Pedreira"                   "Pedro de Toledo"           
+#> [249] "Penápolis"                  "Pereira Barreto"           
+#> [251] "Pereiras"                   "Peruíbe"                   
+#> [253] "Piacatu"                    "Piedade"                   
+#> [255] "Pilar do Sul"               "Pindamonhangaba"           
+#> [257] "Pindorama"                  "Piquete"                   
+#> [259] "Piracaia"                   "Piraju"                    
+#> [261] "Pirajuí"                    "Pirangi"                   
+#> [263] "Pirapora do Bom Jesus"      "Pirapozinho"               
+#> [265] "Pirassununga"               "Pitangueiras"              
+#> [267] "Planalto"                   "Pompéia"                   
+#> [269] "Pontal"                     "Pontalinda"                
+#> [271] "Populina"                   "Porto Ferreira"            
+#> [273] "Potirendaba"                "Pradópolis"                
+#> [275] "Presidente Alves"           "Presidente Bernardes"      
+#> [277] "Presidente Epitácio"        "Presidente Venceslau"      
+#> [279] "Promissão"                  "Quadra"                    
+#> [281] "Quatá"                      "Queluz"                    
+#> [283] "Quintana"                   "Rancharia"                 
+#> [285] "Reginópolis"                "Registro"                  
+#> [287] "Restinga"                   "Ribeirão Branco"           
+#> [289] "Ribeirão Corrente"          "Ribeirão do Sul"           
+#> [291] "Rio Grande da Serra"        "Rio das Pedras"            
+#> [293] "Riversul"                   "Rosana"                    
+#> [295] "Rubiácea"                   "Sabino"                    
+#> [297] "Sagres"                     "Salesópolis"               
+#> [299] "Salto"                      "Salto Grande"              
+#> [301] "Salto de Pirapora"          "Sandovalina"               
+#> [303] "Santa Adélia"               "Santa Albertina"           
+#> [305] "Santa Branca"               "Santa Cruz das Palmeiras"  
+#> [307] "Santa Cruz do Rio Pardo"    "Santa Ernestina"           
+#> [309] "Santa Fé do Sul"            "Santa Isabel"              
+#> [311] "Santa Lúcia"                "Santa Mercedes"            
+#> [313] "Santa Rita do Passa Quatro" "Santo Anastácio"           
+#> [315] "Santo Antônio de Posse"     "Santo Antônio do Jardim"   
+#> [317] "Santo Antônio do Pinhal"    "Santópolis do Aguapeí"     
+#> [319] "Sarapuí"                    "Serra Negra"               
+#> [321] "Serrana"                    "Sertãozinho"               
+#> [323] "Sete Barras"                "Severínia"                 
+#> [325] "Silveiras"                  "Socorro"                   
+#> [327] "Sud Mennucci"               "Suzanápolis"               
+#> [329] "São Bento do Sapucaí"       "São Joaquim da Barra"      
+#> [331] "São José da Bela Vista"     "São José do Barreiro"      
+#> [333] "São José do Rio Pardo"      "São João da Boa Vista"     
+#> [335] "São João de Iracema"        "São Luís do Paraitinga"    
+#> [337] "São Manuel"                 "São Pedro"                 
+#> [339] "São Sebastião da Grama"     "Tabapuã"                   
+#> [341] "Tabatinga"                  "Taguaí"                    
+#> [343] "Taiaçu"                     "Taiúva"                    
+#> [345] "Tambaú"                     "Tapiraí"                   
+#> [347] "Taquaral"                   "Taquaritinga"              
+#> [349] "Taquarivaí"                 "Tarabai"                   
+#> [351] "Tarumã"                     "Teodoro Sampaio"           
+#> [353] "Terra Roxa"                 "Tietê"                     
+#> [355] "Torrinha"                   "Tremembé"                  
+#> [357] "Tupi Paulista"              "Tupã"                      
+#> [359] "Ubarana"                    "Ubirajara"                 
+#> [361] "Uchoa"                      "Urupês"                    
+#> [363] "Valparaíso"                 "Vargem Grande Paulista"    
+#> [365] "Vera Cruz"                  "Viradouro"                 
+#> [367] "Vitória Brasil"             "Votuporanga"               
+#> [369] "Várzea Paulista"            "Águas da Prata"            
+#> [371] "Águas de Lindóia"           "Águas de Santa Bárbara"    
+#> [373] "Águas de São Pedro"         "Álvares Machado"
+```
+
+#### Grupo 2:
+
+``` r
+nome[grupo == 2]
+#>  [1] "Americana"             "Araraquara"            "Araras"               
+#>  [4] "Araçatuba"             "Atibaia"               "Avaré"                
+#>  [7] "Barretos"              "Bauru"                 "Botucatu"             
+#> [10] "Bragança Paulista"     "Cajamar"               "Campinas"             
+#> [13] "Caraguatatuba"         "Carapicuíba"           "Catanduva"            
+#> [16] "Cosmópolis"            "Diadema"               "Embu das Artes"       
+#> [19] "Ferraz de Vasconcelos" "Franca"                "Francisco Morato"     
+#> [22] "Franco da Rocha"       "Guaratinguetá"         "Guarujá"              
+#> [25] "Guarulhos"             "Hortolândia"           "Indaiatuba"           
+#> [28] "Itanhaém"              "Itapecerica da Serra"  "Itapetininga"         
+#> [31] "Itapeva"               "Itapevi"               "Itu"                  
+#> [34] "Jacareí"               "Jaú"                   "Jundiaí"              
+#> [37] "Limeira"               "Marília"               "Mauá"                 
+#> [40] "Mogi Guaçu"            "Mogi Mirim"            "Mogi das Cruzes"      
+#> [43] "Mongaguá"              "Osasco"                "Ourinhos"             
+#> [46] "Piracicaba"            "Porto Feliz"           "Potim"                
+#> [49] "Poá"                   "Praia Grande"          "Presidente Prudente"  
+#> [52] "Ribeirão Preto"        "Rio Claro"             "Santa Bárbara d'Oeste"
+#> [55] "Santana de Parnaíba"   "Santo André"           "Santos"               
+#> [58] "Sorocaba"              "Sumaré"                "Suzano"               
+#> [61] "São Bernardo do Campo" "São Caetano do Sul"    "São Carlos"           
+#> [64] "São José do Rio Preto" "São José dos Campos"   "São Roque"            
+#> [67] "São Sebastião"         "São Vicente"           "Taboão da Serra"      
+#> [70] "Tatuí"                 "Taubaté"               "Ubatuba"              
+#> [73] "Vinhedo"               "Votorantim"
+```
+
+#### Grupo 3:
+
+``` r
+nome[grupo == 3]
+#> [1] "São Paulo"
+```
 
 **4.2 Banco de Leite **  
 4.2.1 Próprio **(OK)**  
@@ -856,6 +1799,8 @@ Alta correlação
 **4.4 Serviço Nutrição**  
 4.4.1 Próprio **(OK)**  
 4.4.2 Terceirizado **(OK)**
+
+### Base de dados - “sisvan”
 
 ``` r
 sisvan_estab <- read_rds("data/sisvan_estab.rds")
@@ -879,44 +1824,37 @@ sisvan <- sisvan_estab %>%
 ```
 
 ``` r
-data_set %>%  glimpse()
-#> Rows: 7,095
-#> Columns: 17
-#> Groups: nome [645]
-#> $ nome                           <chr> "Adamantina", "Adamantina", "Adamantina~
-#> $ ano                            <dbl> 2010, 2011, 2012, 2013, 2014, 2015, 201~
-#> $ familias_beneficiarias_pbf     <dbl> 623.0000, 593.5833, 600.5833, 597.0000,~
-#> $ pessoas_beneficiarias_pbf      <dbl> 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,~
-#> $ valor_pago_pbf                 <dbl> 564177, 683102, 820970, 871484, 742443,~
-#> $ n_produtos_permanente          <int> 13, 13, 8, 8, 9, 9, 8, 7, 8, 7, NA, 8, ~
-#> $ n_produtos_temporaria          <int> 7, 8, 8, 8, 8, 7, 8, 8, 7, 7, NA, 9, 9,~
-#> $ area_plantada_permanente       <int> 931, 925, 918, 878, 883, 873, 862, 862,~
-#> $ area_plantada_temporaria       <int> 14946, 14480, 14382, 14284, 13419, 1388~
-#> $ rendimento_medio_permanente    <dbl> 17445.31, 15640.31, 13261.38, 13636.38,~
-#> $ rendimento_medio_temporaria    <dbl> 24549.14, 28561.12, 19216.71, 28291.38,~
-#> $ prop_area_colhida_permanente   <dbl> 7.693846, 7.691538, 12.500000, 12.50125~
-#> $ prop_area_colhida_temporaria   <dbl> 14.28429, 12.50000, 12.50125, 12.49875,~
-#> $ prop_valor_producao_permanente <dbl> 7.692308, 7.692308, 12.501250, 12.50000~
-#> $ prop_valor_producao_temporaria <dbl> 14.28571, 12.49875, 12.49875, 12.49750,~
-#> $ qt_alunos_pnae                 <dbl> 2904, 2738, 2614, 2810, 2745, 2705, 259~
-#> $ vl_total_escolas               <dbl> 299280.00, 296700.00, 318288.00, 363100~
-sisvan %>%  glimpse()
-#> Rows: 10,965
-#> Columns: 9
-#> Groups: municipio [645]
-#> $ municipio                        <chr> "Adamantina", "Adamantina", "Adamanti~
-#> $ ano                              <dbl> 2006, 2007, 2008, 2009, 2010, 2011, 2~
-#> $ servico_nutricao_proprio         <int> 24, 24, 24, 24, 24, 24, 24, 24, 24, 4~
-#> $ servico_nutricao_terceirizado    <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0~
-#> $ servico_lactario_proprio         <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0~
-#> $ servico_lactario_terceirizado    <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0~
-#> $ servico_banco_leite_proprio      <int> 0, 0, 0, 0, 9, 12, 12, 12, 23, 24, 24~
-#> $ servico_banco_leite_terceirizado <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0~
-#> $ nome                             <chr> "Adamantina", "Adamantina", "Adamanti~
 data_set <- left_join(data_set, sisvan, by = c("ano","nome"))
 # data_set
+```
 
+### Visualização de dados
 
+``` r
+sisvan
+#> # A tibble: 10,965 x 9
+#> # Groups:   municipio [645]
+#>    municipio    ano servico_nutricao_proprio servico_nutricao_terceirizado
+#>    <chr>      <dbl>                    <int>                         <int>
+#>  1 Adamantina  2006                       24                             0
+#>  2 Adamantina  2007                       24                             0
+#>  3 Adamantina  2008                       24                             0
+#>  4 Adamantina  2009                       24                             0
+#>  5 Adamantina  2010                       24                             0
+#>  6 Adamantina  2011                       24                             0
+#>  7 Adamantina  2012                       24                             0
+#>  8 Adamantina  2013                       24                             0
+#>  9 Adamantina  2014                       24                             0
+#> 10 Adamantina  2015                       44                             0
+#> # i 10,955 more rows
+#> # i 5 more variables: servico_lactario_proprio <int>,
+#> #   servico_lactario_terceirizado <int>, servico_banco_leite_proprio <int>,
+#> #   servico_banco_leite_terceirizado <int>, nome <chr>
+```
+
+#### Criando a base resumo
+
+``` r
 sisvan %>%  names
 #> [1] "municipio"                        "ano"                             
 #> [3] "servico_nutricao_proprio"         "servico_nutricao_terceirizado"   
@@ -934,6 +1872,504 @@ sisvan_resumo <- sisvan %>%
     sbleitet = mean(servico_banco_leite_terceirizado,na.rm=TRUE),
   )
 data_set_muni <- left_join(data_set_muni, sisvan_resumo, by = "nome")
+```
+
+#### Tabela de Dados
+
+``` r
+sisvan_resumo 
+#> # A tibble: 645 x 7
+#>    nome              snutrip snutrit slacp slact sbleitep sbleitet
+#>    <chr>               <dbl>   <dbl> <dbl> <dbl>    <dbl>    <dbl>
+#>  1 Adamantina         46.1     0      0        0     15.3        0
+#>  2 Adolfo              0       0      0        0      0          0
+#>  3 Aguaí              10.2     0.412  5.47     0      0          0
+#>  4 Agudos             12       0     12        0      0          0
+#>  5 Alambari            0.647   0      0        0      0          0
+#>  6 Alfredo Marcondes   0       0      0        0      0          0
+#>  7 Altair              0       0      0        0      0          0
+#>  8 Altinópolis        11.9     0      0        0      0          0
+#>  9 Alto Alegre        12       0      0        0      0          0
+#> 10 Alumínio            1.18    0      0        0      0          0
+#> # i 635 more rows
+```
+
+#### Agrupamento e Correlação
+
+``` r
+da <- sisvan_resumo
+da_pad <- decostand(da[-1] , 
+                      method = "standardize",
+                      na.rm=TRUE)
+df <- da_pad %>% 
+  drop_na()
+nome <- da %>%  drop_na() %>%  pull(nome)
+visdat::vis_miss(da_pad)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-63-1.png)<!-- -->
+
+``` r
+da_pad_euc<-vegdist(df,"euclidean",na.rm=TRUE) 
+da_pad_euc_ward<-hclust(da_pad_euc, method="ward.D")
+plot(da_pad_euc_ward, 
+     ylab="Distância Euclidiana",
+     xlab="Acessos", hang=-1,
+     col="blue", las=1,
+     cex=.6,lwd=1.5);box()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-64-1.png)<!-- -->
+
+``` r
+grupo<-cutree(da_pad_euc_ward,4)
+```
+
+``` r
+cor_matrix <- cor(df, use = "na.or.complete")
+corrplot(cor_matrix, method="ellipse")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-65-1.png)<!-- -->
+
+``` r
+pca <-  prcomp(df,
+               scale=T)
+# Autovalores
+eig<-pca$sdev^2
+print(round(eig,3))
+#> [1] 5.452 0.421 0.063 0.038 0.015 0.011
+ve<-eig/sum(eig)
+print(round(ve,4))
+#> [1] 0.9087 0.0702 0.0104 0.0064 0.0024 0.0018
+print(round(cumsum(ve),4)*100)
+#> [1]  90.87  97.89  98.94  99.58  99.82 100.00
+mcor<-cor(df,pca$x)
+corrplot(mcor)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-66-1.png)<!-- -->
+
+``` r
+screeplot(pca)
+abline(h=1)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-66-2.png)<!-- -->
+
+``` r
+pc1V<-cor(df,pca$x)[,1]/sd(cor(df,pca$x)[,1])
+pc2V<-cor(df,pca$x)[,2]/sd(cor(df,pca$x)[,2])
+pc3V<-cor(df,pca$x)[,3]/sd(cor(df,pca$x)[,3])
+pc1c<-pca$x[,1]/sd(pca$x[,1])
+pc2c<-pca$x[,2]/sd(pca$x[,2])
+pc3c<-pca$x[,3]/sd(pca$x[,3])
+nv<-ncol(df)
+```
+
+``` r
+bip<-data.frame(pc1c,pc2c,pc3c,nome,grupo=as.factor(grupo))
+texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
+)
+
+bip %>% 
+  ggplot(aes(x=pc1c, y=pc2c))+
+  geom_point() +
+  geom_point(aes(shape = grupo, color = grupo), size = 3) + theme_minimal()+
+  scale_shape_manual(values=16:19)+
+  scale_color_manual(values=c("#009E73","#999999","#D55E00", "#A6761D"))+
+  geom_vline(aes(xintercept=0),
+             color="black", size=1) +
+  geom_hline(aes(yintercept=0),
+             color="black", size=1) +
+  annotate(geom="segment",
+           x=rep(0,length(df)),
+           xend=texto$x,
+           y=rep(0,length(df)),
+           yend=texto$y,color="black",lwd=.5) +
+  geom_label(data=texto,aes(x=x,y=y,label=label),
+             color="black",angle=0,fontface="bold",size=4,fill="white") +
+  labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
+       y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
+       color="",shape="") +
+  theme(legend.position = "top")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-67-1.png)<!-- -->
+
+``` r
+ck<-sum(pca$sdev^2>=0.98)
+tabelapca<-vector()
+for( l in 1:ck) tabelapca<-cbind(tabelapca,mcor[,l])
+colnames(tabelapca)<-paste(rep(c("PC"),ck),1:ck,sep="")
+pcat<-round(tabelapca,3)
+tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
+print(tabelapca)
+#>   sbleitet      slact   sbleitep      slacp    snutrip    snutrit 
+#> -0.7926525 -0.9747838 -0.9790102 -0.9834235 -0.9867185 -0.9871322
+```
+
+``` r
+df_grupo <- data.frame(nome, grupo)
+df_nomes <- read_rds("data/df_nome.rds")
+df_grupo <- left_join(df_grupo,df_nomes %>% select(id_municipio, nome) ,by ="nome")
+d_sf_municipio <- st_read("shp/35MUE250GC_SIR.shp", quiet = TRUE)
+d_sf_municipio <- d_sf_municipio %>%
+  rename(id_municipio = CD_GEOCMU) %>%
+  inner_join(df_grupo %>%
+               relocate(id_municipio), "id_municipio") %>% 
+  mutate(grupo = as.factor(grupo))
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = grupo))+
+  theme_minimal() +
+  scale_fill_viridis_d()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-69-1.png)<!-- --> \#### Grupo
+1:
+
+``` r
+nome[grupo == 1]
+#>   [1] "Adamantina"                 "Aguaí"                     
+#>   [3] "Agudos"                     "Americana"                 
+#>   [5] "Amparo"                     "Américo Brasiliense"       
+#>   [7] "Andradina"                  "Angatuba"                  
+#>   [9] "Aparecida"                  "Apiaí"                     
+#>  [11] "Araraquara"                 "Araras"                    
+#>  [13] "Araçatuba"                  "Artur Nogueira"            
+#>  [15] "Arujá"                      "Atibaia"                   
+#>  [17] "Avaré"                      "Bariri"                    
+#>  [19] "Barra Bonita"               "Barretos"                  
+#>  [21] "Barrinha"                   "Barueri"                   
+#>  [23] "Bastos"                     "Bebedouro"                 
+#>  [25] "Bernardino de Campos"       "Bertioga"                  
+#>  [27] "Birigui"                    "Borborema"                 
+#>  [29] "Botucatu"                   "Bragança Paulista"         
+#>  [31] "Cachoeira Paulista"         "Caconde"                   
+#>  [33] "Cafelândia"                 "Caieiras"                  
+#>  [35] "Cajuru"                     "Campo Limpo Paulista"      
+#>  [37] "Campos do Jordão"           "Capivari"                  
+#>  [39] "Capão Bonito"               "Caraguatatuba"             
+#>  [41] "Carapicuíba"                "Casa Branca"               
+#>  [43] "Castilho"                   "Catanduva"                 
+#>  [45] "Caçapava"                   "Cosmópolis"                
+#>  [47] "Cotia"                      "Cravinhos"                 
+#>  [49] "Cruzeiro"                   "Cubatão"                   
+#>  [51] "Cunha"                      "Cândido Mota"              
+#>  [53] "Descalvado"                 "Diadema"                   
+#>  [55] "Divinolândia"               "Dois Córregos"             
+#>  [57] "Dourado"                    "Dracena"                   
+#>  [59] "Embu das Artes"             "Embu-Guaçu"                
+#>  [61] "Espírito Santo do Pinhal"   "Fernandópolis"             
+#>  [63] "Ferraz de Vasconcelos"      "Franca"                    
+#>  [65] "Francisco Morato"           "Franco da Rocha"           
+#>  [67] "Garça"                      "Guararapes"                
+#>  [69] "Guaratinguetá"              "Guariba"                   
+#>  [71] "Guarujá"                    "Guará"                     
+#>  [73] "Guaíra"                     "Gália"                     
+#>  [75] "Hortolândia"                "Ibitinga"                  
+#>  [77] "Ibiúna"                     "Igarapava"                 
+#>  [79] "Igaraçu do Tietê"           "Ilha Solteira"             
+#>  [81] "Ilhabela"                   "Indaiatuba"                
+#>  [83] "Itanhaém"                   "Itapecerica da Serra"      
+#>  [85] "Itapetininga"               "Itapeva"                   
+#>  [87] "Itapevi"                    "Itapira"                   
+#>  [89] "Itaporanga"                 "Itaquaquecetuba"           
+#>  [91] "Itatiba"                    "Itu"                       
+#>  [93] "Itupeva"                    "Ituverava"                 
+#>  [95] "Itápolis"                   "Jaboticabal"               
+#>  [97] "Jaci"                       "Jales"                     
+#>  [99] "Jandira"                    "Jaú"                       
+#> [101] "José Bonifácio"             "Laranjal Paulista"         
+#> [103] "Leme"                       "Lençóis Paulista"          
+#> [105] "Limeira"                    "Lins"                      
+#> [107] "Lorena"                     "Macatuba"                  
+#> [109] "Mairinque"                  "Mairiporã"                 
+#> [111] "Matão"                      "Mauá"                      
+#> [113] "Mirandópolis"               "Mirassol"                  
+#> [115] "Mococa"                     "Mogi Guaçu"                
+#> [117] "Mogi Mirim"                 "Mogi das Cruzes"           
+#> [119] "Monte Alto"                 "Monte Mor"                 
+#> [121] "Morro Agudo"                "Nhandeara"                 
+#> [123] "Nova Castilho"              "Nova Odessa"               
+#> [125] "Olímpia"                    "Orlândia"                  
+#> [127] "Osasco"                     "Osvaldo Cruz"              
+#> [129] "Palmital"                   "Pariquera-Açu"             
+#> [131] "Paulínia"                   "Pederneiras"               
+#> [133] "Pedreira"                   "Penápolis"                 
+#> [135] "Pereira Barreto"            "Peruíbe"                   
+#> [137] "Piedade"                    "Pindamonhangaba"           
+#> [139] "Piracicaba"                 "Piraju"                    
+#> [141] "Pirajuí"                    "Pirangi"                   
+#> [143] "Pirassununga"               "Piratininga"               
+#> [145] "Pitangueiras"               "Pompéia"                   
+#> [147] "Pontal"                     "Porto Feliz"               
+#> [149] "Porto Ferreira"             "Poá"                       
+#> [151] "Praia Grande"               "Presidente Prudente"       
+#> [153] "Presidente Venceslau"       "Promissão"                 
+#> [155] "Rancharia"                  "Registro"                  
+#> [157] "Ribeirão Pires"             "Rio Claro"                 
+#> [159] "Rio das Pedras"             "Rosana"                    
+#> [161] "Salto"                      "Salto de Pirapora"         
+#> [163] "Santa Bárbara d'Oeste"      "Santa Cruz do Rio Pardo"   
+#> [165] "Santa Fé do Sul"            "Santa Isabel"              
+#> [167] "Santa Rita do Passa Quatro" "Santana de Parnaíba"       
+#> [169] "Santos"                     "Serra Negra"               
+#> [171] "Serrana"                    "Sertãozinho"               
+#> [173] "Sorocaba"                   "Sumaré"                    
+#> [175] "Suzano"                     "São Bento do Sapucaí"      
+#> [177] "São Caetano do Sul"         "São Carlos"                
+#> [179] "São Joaquim da Barra"       "São José do Rio Pardo"     
+#> [181] "São José do Rio Preto"      "São João da Boa Vista"     
+#> [183] "São Manuel"                 "São Miguel Arcanjo"        
+#> [185] "São Roque"                  "São Sebastião"             
+#> [187] "São Vicente"                "Tabatinga"                 
+#> [189] "Taboão da Serra"            "Tanabi"                    
+#> [191] "Taquaritinga"               "Taquarituba"               
+#> [193] "Tatuí"                      "Tupi Paulista"             
+#> [195] "Tupã"                       "Ubatuba"                   
+#> [197] "Valinhos"                   "Valparaíso"                
+#> [199] "Vargem Grande Paulista"     "Vargem Grande do Sul"      
+#> [201] "Vinhedo"                    "Viradouro"                 
+#> [203] "Votorantim"                 "Votuporanga"               
+#> [205] "Várzea Paulista"
+```
+
+#### Grupo 2:
+
+``` r
+nome[grupo == 2]
+#>   [1] "Adolfo"                     "Alambari"                  
+#>   [3] "Alfredo Marcondes"          "Altair"                    
+#>   [5] "Altinópolis"                "Alto Alegre"               
+#>   [7] "Alumínio"                   "Alvinlândia"               
+#>   [9] "Américo de Campos"          "Analândia"                 
+#>  [11] "Anhembi"                    "Anhumas"                   
+#>  [13] "Aparecida d'Oeste"          "Aramina"                   
+#>  [15] "Arandu"                     "Arapeí"                    
+#>  [17] "Araçariguama"               "Araçoiaba da Serra"        
+#>  [19] "Arco-Íris"                  "Arealva"                   
+#>  [21] "Areias"                     "Areiópolis"                
+#>  [23] "Ariranha"                   "Aspásia"                   
+#>  [25] "Auriflama"                  "Avanhandava"               
+#>  [27] "Avaí"                       "Bady Bassitt"              
+#>  [29] "Balbinos"                   "Bananal"                   
+#>  [31] "Barbosa"                    "Barra do Chapéu"           
+#>  [33] "Barra do Turvo"             "Barão de Antonina"         
+#>  [35] "Batatais"                   "Bento de Abreu"            
+#>  [37] "Bilac"                      "Biritiba-Mirim"            
+#>  [39] "Boa Esperança do Sul"       "Bocaina"                   
+#>  [41] "Bofete"                     "Boituva"                   
+#>  [43] "Bom Jesus dos Perdões"      "Bom Sucesso de Itararé"    
+#>  [45] "Boracéia"                   "Borebi"                    
+#>  [47] "Borá"                       "Braúna"                    
+#>  [49] "Brejo Alegre"               "Brodowski"                 
+#>  [51] "Brotas"                     "Buri"                      
+#>  [53] "Buritama"                   "Buritizal"                 
+#>  [55] "Bálsamo"                    "Cabreúva"                  
+#>  [57] "Cabrália Paulista"          "Caiabu"                    
+#>  [59] "Caiuá"                      "Cajamar"                   
+#>  [61] "Cajati"                     "Cajobi"                    
+#>  [63] "Campina do Monte Alegre"    "Campos Novos Paulista"     
+#>  [65] "Cananéia"                   "Canas"                     
+#>  [67] "Canitar"                    "Capela do Alto"            
+#>  [69] "Cardoso"                    "Catiguá"                   
+#>  [71] "Cedral"                     "Cerqueira César"           
+#>  [73] "Cerquilho"                  "Cesário Lange"             
+#>  [75] "Charqueada"                 "Chavantes"                 
+#>  [77] "Clementina"                 "Colina"                    
+#>  [79] "Colômbia"                   "Conchal"                   
+#>  [81] "Conchas"                    "Cordeirópolis"             
+#>  [83] "Coroados"                   "Coronel Macedo"            
+#>  [85] "Corumbataí"                 "Cosmorama"                 
+#>  [87] "Cristais Paulista"          "Cruzália"                  
+#>  [89] "Cássia dos Coqueiros"       "Cândido Rodrigues"         
+#>  [91] "Dirce Reis"                 "Dobrada"                   
+#>  [93] "Dolcinópolis"               "Duartina"                  
+#>  [95] "Dumont"                     "Echaporã"                  
+#>  [97] "Eldorado"                   "Elias Fausto"              
+#>  [99] "Elisiário"                  "Embaúba"                   
+#> [101] "Emilianópolis"              "Engenheiro Coelho"         
+#> [103] "Espírito Santo do Turvo"    "Estiva Gerbi"              
+#> [105] "Estrela d'Oeste"            "Estrela do Norte"          
+#> [107] "Euclides da Cunha Paulista" "Fartura"                   
+#> [109] "Fernando Prestes"           "Fernão"                    
+#> [111] "Flora Rica"                 "Floreal"                   
+#> [113] "Florínia"                   "Flórida Paulista"          
+#> [115] "Gabriel Monteiro"           "Gastão Vidigal"            
+#> [117] "Gavião Peixoto"             "General Salgado"           
+#> [119] "Getulina"                   "Glicério"                  
+#> [121] "Guaimbê"                    "Guaiçara"                  
+#> [123] "Guapiara"                   "Guapiaçu"                  
+#> [125] "Guaraci"                    "Guarani d'Oeste"           
+#> [127] "Guarantã"                   "Guararema"                 
+#> [129] "Guaraçaí"                   "Guareí"                    
+#> [131] "Guatapará"                  "Guzolândia"                
+#> [133] "Herculândia"                "Holambra"                  
+#> [135] "Iacanga"                    "Iacri"                     
+#> [137] "Iaras"                      "Ibaté"                     
+#> [139] "Ibirarema"                  "Ibirá"                     
+#> [141] "Icém"                       "Iepê"                      
+#> [143] "Igaratá"                    "Iguape"                    
+#> [145] "Ilha Comprida"              "Indiana"                   
+#> [147] "Indiaporã"                  "Inúbia Paulista"           
+#> [149] "Ipaussu"                    "Iperó"                     
+#> [151] "Ipeúna"                     "Ipiguá"                    
+#> [153] "Iporanga"                   "Ipuã"                      
+#> [155] "Iracemápolis"               "Irapuru"                   
+#> [157] "Irapuã"                     "Itaberá"                   
+#> [159] "Itajobi"                    "Itaju"                     
+#> [161] "Itapirapuã Paulista"        "Itapura"                   
+#> [163] "Itapuí"                     "Itararé"                   
+#> [165] "Itariri"                    "Itatinga"                  
+#> [167] "Itaí"                       "Itaóca"                    
+#> [169] "Itirapina"                  "Itirapuã"                  
+#> [171] "Itobi"                      "Jaborandi"                 
+#> [173] "Jacupiranga"                "Jaguariúna"                
+#> [175] "Jambeiro"                   "Jardinópolis"              
+#> [177] "Jarinu"                     "Jeriquara"                 
+#> [179] "Joanópolis"                 "João Ramalho"              
+#> [181] "Jumirim"                    "Junqueirópolis"            
+#> [183] "Juquitiba"                  "Juquiá"                    
+#> [185] "Júlio Mesquita"             "Lagoinha"                  
+#> [187] "Lavrinhas"                  "Lavínia"                   
+#> [189] "Lindóia"                    "Lourdes"                   
+#> [191] "Louveira"                   "Lucianópolis"              
+#> [193] "Lucélia"                    "Luiziânia"                 
+#> [195] "Lupércio"                   "Lutécia"                   
+#> [197] "Luís Antônio"               "Macaubal"                  
+#> [199] "Macedônia"                  "Magda"                     
+#> [201] "Manduri"                    "Marabá Paulista"           
+#> [203] "Maracaí"                    "Marapoama"                 
+#> [205] "Marinópolis"                "Mariápolis"                
+#> [207] "Martinópolis"               "Mendonça"                  
+#> [209] "Meridiano"                  "Mesópolis"                 
+#> [211] "Miguelópolis"               "Mineiros do Tietê"         
+#> [213] "Mira Estrela"               "Miracatu"                  
+#> [215] "Mirante do Paranapanema"    "Mirassolândia"             
+#> [217] "Mombuca"                    "Mongaguá"                  
+#> [219] "Monte Alegre do Sul"        "Monte Aprazível"           
+#> [221] "Monte Azul Paulista"        "Monte Castelo"             
+#> [223] "Monteiro Lobato"            "Monções"                   
+#> [225] "Morungaba"                  "Motuca"                    
+#> [227] "Murutinga do Sul"           "Nantes"                    
+#> [229] "Narandiba"                  "Natividade da Serra"       
+#> [231] "Nazaré Paulista"            "Neves Paulista"            
+#> [233] "Nipoã"                      "Nova Aliança"              
+#> [235] "Nova Campina"               "Nova Canaã Paulista"       
+#> [237] "Nova Europa"                "Nova Granada"              
+#> [239] "Nova Guataporanga"          "Nova Independência"        
+#> [241] "Nova Luzitânia"             "Novais"                    
+#> [243] "Novo Horizonte"             "Nuporanga"                 
+#> [245] "Ocauçu"                     "Onda Verde"                
+#> [247] "Oriente"                    "Orindiúva"                 
+#> [249] "Oscar Bressane"             "Ouro Verde"                
+#> [251] "Ouroeste"                   "Pacaembu"                  
+#> [253] "Palestina"                  "Palmares Paulista"         
+#> [255] "Palmeira d'Oeste"           "Panorama"                  
+#> [257] "Paraguaçu Paulista"         "Paraibuna"                 
+#> [259] "Paranapanema"               "Paranapuã"                 
+#> [261] "Parapuã"                    "Paraíso"                   
+#> [263] "Pardinho"                   "Parisi"                    
+#> [265] "Patrocínio Paulista"        "Paulicéia"                 
+#> [267] "Paulistânia"                "Paulo de Faria"            
+#> [269] "Pedra Bela"                 "Pedranópolis"              
+#> [271] "Pedregulho"                 "Pedrinhas Paulista"        
+#> [273] "Pedro de Toledo"            "Pereiras"                  
+#> [275] "Piacatu"                    "Pilar do Sul"              
+#> [277] "Pindorama"                  "Pinhalzinho"               
+#> [279] "Piquerobi"                  "Piquete"                   
+#> [281] "Piracaia"                   "Pirapora do Bom Jesus"     
+#> [283] "Pirapozinho"                "Planalto"                  
+#> [285] "Platina"                    "Poloni"                    
+#> [287] "Pongaí"                     "Pontalinda"                
+#> [289] "Pontes Gestal"              "Populina"                  
+#> [291] "Porangaba"                  "Potim"                     
+#> [293] "Potirendaba"                "Pracinha"                  
+#> [295] "Pradópolis"                 "Pratânia"                  
+#> [297] "Presidente Alves"           "Presidente Bernardes"      
+#> [299] "Presidente Epitácio"        "Quadra"                    
+#> [301] "Quatá"                      "Queiroz"                   
+#> [303] "Queluz"                     "Quintana"                  
+#> [305] "Rafard"                     "Redenção da Serra"         
+#> [307] "Regente Feijó"              "Reginópolis"               
+#> [309] "Restinga"                   "Ribeira"                   
+#> [311] "Ribeirão Bonito"            "Ribeirão Branco"           
+#> [313] "Ribeirão Corrente"          "Ribeirão Grande"           
+#> [315] "Ribeirão do Sul"            "Ribeirão dos Índios"       
+#> [317] "Rifaina"                    "Rincão"                    
+#> [319] "Rinópolis"                  "Rio Grande da Serra"       
+#> [321] "Riolândia"                  "Riversul"                  
+#> [323] "Roseira"                    "Rubinéia"                  
+#> [325] "Rubiácea"                   "Sabino"                    
+#> [327] "Sagres"                     "Sales"                     
+#> [329] "Sales Oliveira"             "Salesópolis"               
+#> [331] "Salmourão"                  "Saltinho"                  
+#> [333] "Salto Grande"               "Sandovalina"               
+#> [335] "Santa Adélia"               "Santa Albertina"           
+#> [337] "Santa Branca"               "Santa Clara d'Oeste"       
+#> [339] "Santa Cruz da Conceição"    "Santa Cruz da Esperança"   
+#> [341] "Santa Cruz das Palmeiras"   "Santa Ernestina"           
+#> [343] "Santa Gertrudes"            "Santa Lúcia"               
+#> [345] "Santa Maria da Serra"       "Santa Mercedes"            
+#> [347] "Santa Rita d'Oeste"         "Santa Rosa de Viterbo"     
+#> [349] "Santa Salete"               "Santana da Ponte Pensa"    
+#> [351] "Santo Anastácio"            "Santo Antônio da Alegria"  
+#> [353] "Santo Antônio de Posse"     "Santo Antônio do Aracanguá"
+#> [355] "Santo Antônio do Jardim"    "Santo Antônio do Pinhal"   
+#> [357] "Santo Expedito"             "Santópolis do Aguapeí"     
+#> [359] "Sarapuí"                    "Sarutaiá"                  
+#> [361] "Sebastianópolis do Sul"     "Serra Azul"                
+#> [363] "Sete Barras"                "Severínia"                 
+#> [365] "Silveiras"                  "Socorro"                   
+#> [367] "Sud Mennucci"               "Suzanápolis"               
+#> [369] "São Francisco"              "São José da Bela Vista"    
+#> [371] "São José do Barreiro"       "São João das Duas Pontes"  
+#> [373] "São João de Iracema"        "São João do Pau d'Alho"    
+#> [375] "São Lourenço da Serra"      "São Luís do Paraitinga"    
+#> [377] "São Pedro"                  "São Pedro do Turvo"        
+#> [379] "São Sebastião da Grama"     "São Simão"                 
+#> [381] "Tabapuã"                    "Taciba"                    
+#> [383] "Taguaí"                     "Taiaçu"                    
+#> [385] "Taiúva"                     "Tambaú"                    
+#> [387] "Tapiratiba"                 "Tapiraí"                   
+#> [389] "Taquaral"                   "Taquarivaí"                
+#> [391] "Tarabai"                    "Tarumã"                    
+#> [393] "Tejupá"                     "Teodoro Sampaio"           
+#> [395] "Terra Roxa"                 "Tietê"                     
+#> [397] "Timburi"                    "Torre de Pedra"            
+#> [399] "Torrinha"                   "Trabiju"                   
+#> [401] "Tremembé"                   "Três Fronteiras"           
+#> [403] "Tuiuti"                     "Turiúba"                   
+#> [405] "Turmalina"                  "Ubarana"                   
+#> [407] "Ubirajara"                  "Uchoa"                     
+#> [409] "União Paulista"             "Uru"                       
+#> [411] "Urupês"                     "Urânia"                    
+#> [413] "Valentim Gentil"            "Vargem"                    
+#> [415] "Vera Cruz"                  "Vista Alegre do Alto"      
+#> [417] "Vitória Brasil"             "Zacarias"                  
+#> [419] "Águas da Prata"             "Águas de Lindóia"          
+#> [421] "Águas de Santa Bárbara"     "Águas de São Pedro"        
+#> [423] "Álvares Florence"           "Álvares Machado"           
+#> [425] "Álvaro de Carvalho"         "Óleo"
+```
+
+#### Grupo 3:
+
+``` r
+nome[grupo == 3]
+#>  [1] "Assis"                 "Bauru"                 "Campinas"             
+#>  [4] "Guarulhos"             "Jacareí"               "Jundiaí"              
+#>  [7] "Marília"               "Ourinhos"              "Ribeirão Preto"       
+#> [10] "Santo André"           "São Bernardo do Campo" "São José dos Campos"  
+#> [13] "Taubaté"
+```
+
+#### Grupo 4:
+
+``` r
+nome[grupo == 4]
+#> [1] "São Paulo"
 ```
 
 ------------------------------------------------------------------------
@@ -1177,6 +2613,283 @@ data_set_muni <- left_join(data_set_muni,
                            by = "nome")
 ```
 
+#### Agrupamento e Correlação
+
+``` r
+da <- consumo_resumo
+da_pad <- decostand(da[-1] , 
+                      method = "standardize",
+                      na.rm=TRUE)
+df <- da_pad %>% 
+  drop_na()
+nome <- da %>%  drop_na() %>%  pull(nome)
+visdat::vis_miss(da_pad)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-77-1.png)<!-- -->
+
+``` r
+da_pad_euc<-vegdist(df,"euclidean",na.rm=TRUE) 
+da_pad_euc_ward<-hclust(da_pad_euc, method="ward.D")
+plot(da_pad_euc_ward, 
+     ylab="Distância Euclidiana",
+     xlab="Acessos", hang=-1,
+     col="blue", las=1,
+     cex=.6,lwd=1.5);box()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-78-1.png)<!-- -->
+
+``` r
+grupo<-cutree(da_pad_euc_ward,4)
+```
+
+``` r
+cor_matrix <- cor(df, use = "na.or.complete")
+corrplot(cor_matrix, method="ellipse")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-79-1.png)<!-- -->
+
+``` r
+pca <-  prcomp(df,
+               scale=T)
+# Autovalores
+eig<-pca$sdev^2
+print(round(eig,3))
+#>  [1] 4.035 1.578 1.276 0.996 0.624 0.472 0.394 0.358 0.205 0.062
+ve<-eig/sum(eig)
+print(round(ve,4))
+#>  [1] 0.4035 0.1578 0.1276 0.0996 0.0624 0.0472 0.0394 0.0358 0.0205 0.0062
+print(round(cumsum(ve),4)*100)
+#>  [1]  40.35  56.13  68.89  78.85  85.09  89.81  93.75  97.33  99.38 100.00
+mcor<-cor(df,pca$x)
+corrplot(mcor)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-80-1.png)<!-- -->
+
+``` r
+screeplot(pca)
+abline(h=1)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-80-2.png)<!-- -->
+
+``` r
+pc1V<-cor(df,pca$x)[,1]/sd(cor(df,pca$x)[,1])
+pc2V<-cor(df,pca$x)[,2]/sd(cor(df,pca$x)[,2])
+pc3V<-cor(df,pca$x)[,3]/sd(cor(df,pca$x)[,3])
+pc1c<-pca$x[,1]/sd(pca$x[,1])
+pc2c<-pca$x[,2]/sd(pca$x[,2])
+pc3c<-pca$x[,3]/sd(pca$x[,3])
+nv<-ncol(df)
+```
+
+``` r
+bip<-data.frame(pc1c,pc2c,pc3c,nome,grupo=as.factor(grupo))
+texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
+)
+
+bip %>% 
+  ggplot(aes(x=pc1c, y=pc2c))+
+  geom_point() +
+  geom_point(aes(shape = grupo, color = grupo), size = 3) + theme_minimal()+
+  scale_shape_manual(values=16:19)+
+  scale_color_manual(values=c("#009E73", "#999999", "#D55E00", "#A6761D"))+
+  geom_vline(aes(xintercept=0),
+             color="black", size=1) +
+  geom_hline(aes(yintercept=0),
+             color="black", size=1) +
+  annotate(geom="segment",
+           x=rep(0,length(df)),
+           xend=texto$x,
+           y=rep(0,length(df)),
+           yend=texto$y,color="black",lwd=.5) +
+  geom_label(data=texto,aes(x=x,y=y,label=label),
+             color="black",angle=0,fontface="bold",size=4,fill="white") +
+  labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
+       y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
+       color="",shape="") +
+  theme(legend.position = "top")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-81-1.png)<!-- -->
+
+``` r
+ck<-sum(pca$sdev^2>=0.98)
+tabelapca<-vector()
+for( l in 1:ck) tabelapca<-cbind(tabelapca,mcor[,l])
+colnames(tabelapca)<-paste(rep(c("PC"),ck),1:ck,sep="")
+pcat<-round(tabelapca,3)
+tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
+print(tabelapca)
+#>                   PC1         PC2         PC3         PC4
+#> cri24_embut 0.4629658 -0.40580103  0.24812032  0.57111880
+#> cri24_ultra 0.5174432 -0.37557296 -0.51982499  0.33524806
+#> ido_embut   0.6004857  0.73390324 -0.06481304  0.23726743
+#> adol_ultra  0.6202454 -0.16711995 -0.37493157 -0.47589811
+#> cri59_embut 0.6240228 -0.29179349  0.29350331  0.15504768
+#> ido_ultra   0.6241107  0.71587041 -0.08573214  0.22955550
+#> adol_embut  0.6822940 -0.06500517  0.51580641 -0.20077603
+#> cri59_ultra 0.6915175 -0.30534803 -0.37175796  0.02773339
+#> adul_embut  0.7059150 -0.04702751  0.50908235 -0.21781144
+#> adul_ultra  0.7659058  0.09031611 -0.20667317 -0.33115979
+```
+
+``` r
+df_grupo <- data.frame(nome, grupo)
+df_nomes <- read_rds("data/df_nome.rds")
+df_grupo <- left_join(df_grupo,df_nomes %>% select(id_municipio, nome) ,by ="nome")
+d_sf_municipio <- st_read("shp/35MUE250GC_SIR.shp", quiet = TRUE)
+d_sf_municipio <- d_sf_municipio %>%
+  rename(id_municipio = CD_GEOCMU) %>%
+  inner_join(df_grupo %>%
+               relocate(id_municipio), "id_municipio") %>% 
+  mutate(grupo = as.factor(grupo))
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = grupo))+
+  theme_minimal() +
+  scale_fill_viridis_d()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-83-1.png)<!-- --> \#### Grupo
+1:
+
+``` r
+nome[grupo == 1]
+#>  [1] "Adamantina"              "Alfredo Marcondes"      
+#>  [3] "Alto Alegre"             "Anhumas"                
+#>  [5] "Arandu"                  "Araçatuba"              
+#>  [7] "Arujá"                   "Barueri"                
+#>  [9] "Barão de Antonina"       "Bastos"                 
+#> [11] "Botucatu"                "Buritizal"              
+#> [13] "Caconde"                 "Capela do Alto"         
+#> [15] "Cedral"                  "Colina"                 
+#> [17] "Conchal"                 "Cordeirópolis"          
+#> [19] "Cruzália"                "Diadema"                
+#> [21] "Dois Córregos"           "Embu das Artes"         
+#> [23] "Fernão"                  "Garça"                  
+#> [25] "Glicério"                "Guareí"                 
+#> [27] "Guarulhos"               "Guaíra"                 
+#> [29] "Ilhabela"                "Indiaporã"              
+#> [31] "Ipaussu"                 "Itajobi"                
+#> [33] "Itapecerica da Serra"    "Itapura"                
+#> [35] "Jacareí"                 "Jales"                  
+#> [37] "Junqueirópolis"          "Lavrinhas"              
+#> [39] "Lucianópolis"            "Luiziânia"              
+#> [41] "Luís Antônio"            "Mairiporã"              
+#> [43] "Marapoama"               "Marinópolis"            
+#> [45] "Martinópolis"            "Mogi Mirim"             
+#> [47] "Monte Alto"              "Nova Castilho"          
+#> [49] "Nova Europa"             "Nova Guataporanga"      
+#> [51] "Osasco"                  "Oscar Bressane"         
+#> [53] "Paraibuna"               "Paulistânia"            
+#> [55] "Penápolis"               "Pereira Barreto"        
+#> [57] "Pompéia"                 "Porto Feliz"            
+#> [59] "Presidente Prudente"     "Presidente Venceslau"   
+#> [61] "Quatá"                   "Queiroz"                
+#> [63] "Rancharia"               "Registro"               
+#> [65] "Ribeirão Grande"         "Ribeirão Preto"         
+#> [67] "Ribeirão do Sul"         "Santana de Parnaíba"    
+#> [69] "Santo Anastácio"         "Santo André"            
+#> [71] "Santo Antônio do Jardim" "Santo Expedito"         
+#> [73] "Sertãozinho"             "Suzano"                 
+#> [75] "Suzanápolis"             "São Bento do Sapucaí"   
+#> [77] "São Joaquim da Barra"    "São José do Rio Preto"  
+#> [79] "São João de Iracema"     "São Manuel"             
+#> [81] "São Paulo"               "São Pedro do Turvo"     
+#> [83] "São Roque"               "São Sebastião"          
+#> [85] "Taciba"                  "Tarabai"                
+#> [87] "Taubaté"                 "Turiúba"                
+#> [89] "Ubarana"                 "Ubirajara"              
+#> [91] "Viradouro"               "Várzea Paulista"        
+#> [93] "Águas de Lindóia"
+```
+
+#### Grupo 2:
+
+``` r
+nome[grupo == 2]
+#>  [1] "Aguaí"                   "Altinópolis"            
+#>  [3] "Areiópolis"              "Barbosa"                
+#>  [5] "Bariri"                  "Bebedouro"              
+#>  [7] "Biritiba-Mirim"          "Capivari"               
+#>  [9] "Caçapava"                "Cosmópolis"             
+#> [11] "Eldorado"                "Guararapes"             
+#> [13] "Guaratinguetá"           "Guarujá"                
+#> [15] "Iaras"                   "Igaraçu do Tietê"       
+#> [17] "Irapuã"                  "Itapira"                
+#> [19] "Jaborandi"               "Joanópolis"             
+#> [21] "Limeira"                 "Lorena"                 
+#> [23] "Macedônia"               "Mirante do Paranapanema"
+#> [25] "Mococa"                  "Mogi Guaçu"             
+#> [27] "Olímpia"                 "Pacaembu"               
+#> [29] "Paraguaçu Paulista"      "Pedra Bela"             
+#> [31] "Pedro de Toledo"         "Pindamonhangaba"        
+#> [33] "Piquerobi"               "Pirajuí"                
+#> [35] "Pirapozinho"             "Platina"                
+#> [37] "Pontal"                  "Promissão"              
+#> [39] "Rafard"                  "Restinga"               
+#> [41] "Santa Branca"            "Santa Bárbara d'Oeste"  
+#> [43] "Santa Lúcia"             "Sebastianópolis do Sul" 
+#> [45] "São Bernardo do Campo"   "São José dos Campos"    
+#> [47] "Taguaí"                  "Tarumã"                 
+#> [49] "Teodoro Sampaio"         "Urupês"                 
+#> [51] "Urânia"                  "Vargem"                 
+#> [53] "Vargem Grande do Sul"    "Álvares Florence"       
+#> [55] "Álvaro de Carvalho"
+```
+
+#### Grupo 3:
+
+``` r
+nome[grupo == 3]
+#>  [1] "Araras"                     "Assis"                     
+#>  [3] "Atibaia"                    "Auriflama"                 
+#>  [5] "Avaré"                      "Barra Bonita"              
+#>  [7] "Barretos"                   "Bauru"                     
+#>  [9] "Birigui"                    "Bragança Paulista"         
+#> [11] "Cajuru"                     "Campos Novos Paulista"     
+#> [13] "Campos do Jordão"           "Cubatão"                   
+#> [15] "Cândido Mota"               "Dracena"                   
+#> [17] "Espírito Santo do Pinhal"   "Euclides da Cunha Paulista"
+#> [19] "Fartura"                    "Fernandópolis"             
+#> [21] "Ferraz de Vasconcelos"      "Guapiaçu"                  
+#> [23] "Guaraci"                    "Gália"                     
+#> [25] "Ibitinga"                   "Iepê"                      
+#> [27] "Ilha Comprida"              "Itapevi"                   
+#> [29] "Itaquaquecetuba"            "Itararé"                   
+#> [31] "Itatiba"                    "Ituverava"                 
+#> [33] "Jaboticabal"                "Jardinópolis"              
+#> [35] "Jaú"                        "José Bonifácio"            
+#> [37] "Jundiaí"                    "Leme"                      
+#> [39] "Lucélia"                    "Macaubal"                  
+#> [41] "Marília"                    "Monte Castelo"             
+#> [43] "Nhandeara"                  "Parapuã"                   
+#> [45] "Paulicéia"                  "Piracicaba"                
+#> [47] "Pirassununga"               "Pongaí"                    
+#> [49] "Pontes Gestal"              "Praia Grande"              
+#> [51] "Presidente Alves"           "Rio Claro"                 
+#> [53] "Salto"                      "Santa Cruz das Palmeiras"  
+#> [55] "Santa Fé do Sul"            "Santa Mercedes"            
+#> [57] "Santópolis do Aguapeí"      "Serra Azul"                
+#> [59] "Serrana"                    "Sud Mennucci"              
+#> [61] "São Caetano do Sul"         "São José da Bela Vista"    
+#> [63] "São José do Barreiro"       "São Miguel Arcanjo"        
+#> [65] "São Sebastião da Grama"     "São Vicente"               
+#> [67] "Taboão da Serra"            "Taiúva"                    
+#> [69] "Tambaú"                     "Tremembé"                  
+#> [71] "Votuporanga"                "Águas de Santa Bárbara"
+```
+
+#### Grupo 4:
+
+``` r
+nome[grupo == 4]
+#> [1] "Brodowski" "Elisiário" "Lourdes"   "Mauá"      "São Simão"
+```
+
 ------------------------------------------------------------------------
 
 **DESAFIO 7**. Ampliar a disponibilidade hídrica e o acesso à água para
@@ -1241,8 +2954,7 @@ mais
 # Análise multivariada
 
 ``` r
-da <- data_set_muni %>% ungroup()
-glimpse(da)
+data_set_muni %>% glimpse()
 #> Rows: 645
 #> Columns: 96
 #> $ nome                <chr> "Adamantina", "Adolfo", "Aguaí", "Agudos", "Alamba~

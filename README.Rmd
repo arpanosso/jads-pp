@@ -11,6 +11,9 @@ knitr::opts_chunk$set(
   error = FALSE,
   comment = "#>"
 )
+
+# 2,5,7,8,9
+# ainda não temos banco de dados correspondente
 ```
 
 ## Carregando Pacotes
@@ -19,11 +22,13 @@ library(readxl)
 library(tidyverse)
 library(vegan)
 library(corrplot)
+library(bit64)
+library(ggpubr)
+library(stringr)
+library(sf)
 source("R/my-functions.R")
 theme_set(theme_bw())
 ```
-
-
 ---
 
 **DESAFIO 1**. Promover o acesso universal à alimentação adequada e saudável, com prioridade para as famílias e pessoas em situação de insegurança alimentar e nutricional  
@@ -99,7 +104,7 @@ data_set_muni <- data_set %>% filter(ano>= 2015, ano < 2020) %>%
 
 
 ```{r}
-nomes <- data_set_muni$nome
+nome <- data_set_muni$nome
 da <- data_set_muni
 da_pad <- decostand(da[-1] , 
                       method = "standardize",
@@ -152,13 +157,16 @@ nv<-ncol(df)
 ```
 
 ```{r}
-bip<-data.frame(pc1c,pc2c,pc3c)#,nome)
+bip<-data.frame(pc1c,pc2c,pc3c,nome,grupo=as.factor(grupo))
 texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
 )
 
 bip %>% 
   ggplot(aes(x=pc1c, y=pc2c))+
   geom_point() +
+  geom_point(aes(shape = grupo, color = grupo), size = 3) + theme_minimal()+
+  scale_shape_manual(values=16:18)+
+  scale_color_manual(values=c("#009E73","#D55E00", "#A6761D"))+
   geom_vline(aes(xintercept=0),
              color="black", size=1) +
   geom_hline(aes(yintercept=0),
@@ -186,6 +194,37 @@ tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
 print(tabelapca)
 ```
 
+```{r}
+df_grupo <- data.frame(nome, grupo)
+df_nomes <- read_rds("data/df_nome.rds")
+df_grupo <- left_join(df_grupo,df_nomes %>% select(id_municipio, nome) ,by ="nome")
+d_sf_municipio <- st_read("shp/35MUE250GC_SIR.shp", quiet = TRUE)
+d_sf_municipio <- d_sf_municipio %>%
+  rename(id_municipio = CD_GEOCMU) %>%
+  inner_join(df_grupo %>%
+               relocate(id_municipio), "id_municipio") %>% 
+  mutate(grupo = as.factor(grupo))
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = grupo))+
+  theme_minimal() +
+  scale_fill_viridis_d()
+```
+#### Grupo 1:
+
+```{r}
+nome[grupo == 1]
+```
+#### Grupo 2:
+
+```{r}
+nome[grupo == 2]
+```
+
+#### Grupo 3:
+
+```{r}
+nome[grupo == 3]
+```
 
 
 ---
@@ -403,14 +442,13 @@ data_set_muni <- left_join(data_set_muni,
 #### Agrupamento e Correlação
 
 ```{r}
-nomes <- lavouras_resu$nome
 da <- lavouras_resu
 da_pad <- decostand(da[-1] , 
                       method = "standardize",
                       na.rm=TRUE)
 df <- da_pad %>% 
   drop_na()
-
+nome <- da %>% drop_na() %>%  pull(nome)
 visdat::vis_miss(da_pad)
 ```
 
@@ -455,13 +493,16 @@ nv<-ncol(df)
 ```
 
 ```{r}
-bip<-data.frame(pc1c,pc2c,pc3c)#,nome)
+bip<-data.frame(pc1c,pc2c,pc3c,nome,grupo=as.factor(grupo))
 texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
 )
 
 bip %>% 
   ggplot(aes(x=pc1c, y=pc2c))+
   geom_point() +
+  geom_point(aes(shape = grupo, color = grupo), size = 3) + theme_minimal()+
+  scale_shape_manual(values=16:18)+
+  scale_color_manual(values=c("#009E73","#D55E00", "#A6761D"))+
   geom_vline(aes(xintercept=0),
              color="black", size=1) +
   geom_hline(aes(yintercept=0),
@@ -487,6 +528,38 @@ colnames(tabelapca)<-paste(rep(c("PC"),ck),1:ck,sep="")
 pcat<-round(tabelapca,3)
 tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
 print(tabelapca)
+```
+
+```{r}
+df_grupo <- data.frame(nome, grupo)
+df_nomes <- read_rds("data/df_nome.rds")
+df_grupo <- left_join(df_grupo,df_nomes %>% select(id_municipio, nome) ,by ="nome")
+d_sf_municipio <- st_read("shp/35MUE250GC_SIR.shp", quiet = TRUE)
+d_sf_municipio <- d_sf_municipio %>%
+  rename(id_municipio = CD_GEOCMU) %>%
+  inner_join(df_grupo %>%
+               relocate(id_municipio), "id_municipio") %>% 
+  mutate(grupo = as.factor(grupo))
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = grupo))+
+  theme_minimal() +
+  scale_fill_viridis_d()
+```
+#### Grupo 1:
+
+```{r}
+nome[grupo == 1]
+```
+#### Grupo 2:
+
+```{r}
+nome[grupo == 2]
+```
+
+#### Grupo 3:
+
+```{r}
+nome[grupo == 3]
 ```
 
 ---
@@ -627,7 +700,7 @@ da_pad <- decostand(da[-1] ,
                       na.rm=TRUE)
 df <- da_pad %>% 
   drop_na()
-
+nome <- da %>%  drop_na() %>%  pull(nome)
 visdat::vis_miss(da_pad)
 ```
 
@@ -647,8 +720,6 @@ grupo<-cutree(da_pad_euc_ward,3)
 cor_matrix <- cor(df, use = "na.or.complete")
 corrplot(cor_matrix, method="ellipse")
 ```
-
-
 ```{r}
 pca <-  prcomp(df,
                scale=T)
@@ -672,13 +743,16 @@ nv<-ncol(df)
 ```
 
 ```{r}
-bip<-data.frame(pc1c,pc2c,pc3c)#,nome)
+bip<-data.frame(pc1c,pc2c,pc3c,nome,grupo=as.factor(grupo))
 texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
 )
 
 bip %>% 
   ggplot(aes(x=pc1c, y=pc2c))+
   geom_point() +
+  geom_point(aes(shape = grupo, color = grupo), size = 3) + theme_minimal()+
+  scale_shape_manual(values=16:18)+
+  scale_color_manual(values=c("#009E73","#D55E00", "#A6761D"))+
   geom_vline(aes(xintercept=0),
              color="black", size=1) +
   geom_hline(aes(yintercept=0),
@@ -706,7 +780,38 @@ tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
 print(tabelapca)
 ```
 
-Alta correlação
+```{r}
+df_grupo <- data.frame(nome, grupo)
+df_nomes <- read_rds("data/df_nome.rds")
+df_grupo <- left_join(df_grupo,df_nomes %>% select(id_municipio, nome) ,by ="nome")
+d_sf_municipio <- st_read("shp/35MUE250GC_SIR.shp", quiet = TRUE)
+d_sf_municipio <- d_sf_municipio %>%
+  rename(id_municipio = CD_GEOCMU) %>%
+  inner_join(df_grupo %>%
+               relocate(id_municipio), "id_municipio") %>% 
+  mutate(grupo = as.factor(grupo))
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = grupo))+
+  theme_minimal() +
+  scale_fill_viridis_d()
+```
+#### Grupo 1:
+
+```{r}
+nome[grupo == 1]
+```
+#### Grupo 2:
+
+```{r}
+nome[grupo == 2]
+```
+
+#### Grupo 3:
+
+```{r}
+nome[grupo == 3]
+```
+
 
 **4.2 Banco de Leite **  
 4.2.1 Próprio  **(OK)**  
@@ -718,6 +823,8 @@ Alta correlação
 4.4.1 Próprio  **(OK)**  
 4.4.2 Terceirizado **(OK)**   
 
+
+### Base de dados - "sisvan"
 
 ```{r}
 sisvan_estab <- read_rds("data/sisvan_estab.rds")
@@ -742,12 +849,23 @@ sisvan <- sisvan_estab %>%
 
 
 ```{r}
-data_set %>%  glimpse()
-sisvan %>%  glimpse()
 data_set <- left_join(data_set, sisvan, by = c("ano","nome"))
 # data_set
+```
+
+### Visualização de dados
+
+```{r}
+sisvan
+```
 
 
+
+
+
+#### Criando a base resumo
+
+```{r}
 sisvan %>%  names
 sisvan_resumo <- sisvan %>% 
   group_by(nome) %>% 
@@ -762,6 +880,139 @@ sisvan_resumo <- sisvan %>%
 data_set_muni <- left_join(data_set_muni, sisvan_resumo, by = "nome")
 ```
 
+#### Tabela de Dados
+
+```{r}
+sisvan_resumo 
+```
+
+#### Agrupamento e Correlação
+
+```{r}
+da <- sisvan_resumo
+da_pad <- decostand(da[-1] , 
+                      method = "standardize",
+                      na.rm=TRUE)
+df <- da_pad %>% 
+  drop_na()
+nome <- da %>%  drop_na() %>%  pull(nome)
+visdat::vis_miss(da_pad)
+```
+
+```{r}
+da_pad_euc<-vegdist(df,"euclidean",na.rm=TRUE) 
+da_pad_euc_ward<-hclust(da_pad_euc, method="ward.D")
+plot(da_pad_euc_ward, 
+     ylab="Distância Euclidiana",
+     xlab="Acessos", hang=-1,
+     col="blue", las=1,
+     cex=.6,lwd=1.5);box()
+grupo<-cutree(da_pad_euc_ward,4)
+```
+
+
+```{r}
+cor_matrix <- cor(df, use = "na.or.complete")
+corrplot(cor_matrix, method="ellipse")
+```
+
+```{r}
+pca <-  prcomp(df,
+               scale=T)
+# Autovalores
+eig<-pca$sdev^2
+print(round(eig,3))
+ve<-eig/sum(eig)
+print(round(ve,4))
+print(round(cumsum(ve),4)*100)
+mcor<-cor(df,pca$x)
+corrplot(mcor)
+screeplot(pca)
+abline(h=1)
+pc1V<-cor(df,pca$x)[,1]/sd(cor(df,pca$x)[,1])
+pc2V<-cor(df,pca$x)[,2]/sd(cor(df,pca$x)[,2])
+pc3V<-cor(df,pca$x)[,3]/sd(cor(df,pca$x)[,3])
+pc1c<-pca$x[,1]/sd(pca$x[,1])
+pc2c<-pca$x[,2]/sd(pca$x[,2])
+pc3c<-pca$x[,3]/sd(pca$x[,3])
+nv<-ncol(df)
+```
+
+```{r}
+bip<-data.frame(pc1c,pc2c,pc3c,nome,grupo=as.factor(grupo))
+texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
+)
+
+bip %>% 
+  ggplot(aes(x=pc1c, y=pc2c))+
+  geom_point() +
+  geom_point(aes(shape = grupo, color = grupo), size = 3) + theme_minimal()+
+  scale_shape_manual(values=16:19)+
+  scale_color_manual(values=c("#009E73","#999999","#D55E00", "#A6761D"))+
+  geom_vline(aes(xintercept=0),
+             color="black", size=1) +
+  geom_hline(aes(yintercept=0),
+             color="black", size=1) +
+  annotate(geom="segment",
+           x=rep(0,length(df)),
+           xend=texto$x,
+           y=rep(0,length(df)),
+           yend=texto$y,color="black",lwd=.5) +
+  geom_label(data=texto,aes(x=x,y=y,label=label),
+             color="black",angle=0,fontface="bold",size=4,fill="white") +
+  labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
+       y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
+       color="",shape="") +
+  theme(legend.position = "top")
+```
+
+```{r}
+ck<-sum(pca$sdev^2>=0.98)
+tabelapca<-vector()
+for( l in 1:ck) tabelapca<-cbind(tabelapca,mcor[,l])
+colnames(tabelapca)<-paste(rep(c("PC"),ck),1:ck,sep="")
+pcat<-round(tabelapca,3)
+tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
+print(tabelapca)
+```
+
+```{r}
+df_grupo <- data.frame(nome, grupo)
+df_nomes <- read_rds("data/df_nome.rds")
+df_grupo <- left_join(df_grupo,df_nomes %>% select(id_municipio, nome) ,by ="nome")
+d_sf_municipio <- st_read("shp/35MUE250GC_SIR.shp", quiet = TRUE)
+d_sf_municipio <- d_sf_municipio %>%
+  rename(id_municipio = CD_GEOCMU) %>%
+  inner_join(df_grupo %>%
+               relocate(id_municipio), "id_municipio") %>% 
+  mutate(grupo = as.factor(grupo))
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = grupo))+
+  theme_minimal() +
+  scale_fill_viridis_d()
+```
+#### Grupo 1:
+
+```{r}
+nome[grupo == 1]
+```
+#### Grupo 2:
+
+```{r}
+nome[grupo == 2]
+```
+
+#### Grupo 3:
+
+```{r}
+nome[grupo == 3]
+```
+
+#### Grupo 4:
+
+```{r}
+nome[grupo == 4]
+```
 
 ---
 
@@ -958,6 +1209,134 @@ data_set_muni <- left_join(data_set_muni,
 ```
 
 
+#### Agrupamento e Correlação
+
+```{r}
+da <- consumo_resumo
+da_pad <- decostand(da[-1] , 
+                      method = "standardize",
+                      na.rm=TRUE)
+df <- da_pad %>% 
+  drop_na()
+nome <- da %>%  drop_na() %>%  pull(nome)
+visdat::vis_miss(da_pad)
+```
+
+```{r}
+da_pad_euc<-vegdist(df,"euclidean",na.rm=TRUE) 
+da_pad_euc_ward<-hclust(da_pad_euc, method="ward.D")
+plot(da_pad_euc_ward, 
+     ylab="Distância Euclidiana",
+     xlab="Acessos", hang=-1,
+     col="blue", las=1,
+     cex=.6,lwd=1.5);box()
+grupo<-cutree(da_pad_euc_ward,4)
+```
+
+
+```{r}
+cor_matrix <- cor(df, use = "na.or.complete")
+corrplot(cor_matrix, method="ellipse")
+```
+```{r}
+pca <-  prcomp(df,
+               scale=T)
+# Autovalores
+eig<-pca$sdev^2
+print(round(eig,3))
+ve<-eig/sum(eig)
+print(round(ve,4))
+print(round(cumsum(ve),4)*100)
+mcor<-cor(df,pca$x)
+corrplot(mcor)
+screeplot(pca)
+abline(h=1)
+pc1V<-cor(df,pca$x)[,1]/sd(cor(df,pca$x)[,1])
+pc2V<-cor(df,pca$x)[,2]/sd(cor(df,pca$x)[,2])
+pc3V<-cor(df,pca$x)[,3]/sd(cor(df,pca$x)[,3])
+pc1c<-pca$x[,1]/sd(pca$x[,1])
+pc2c<-pca$x[,2]/sd(pca$x[,2])
+pc3c<-pca$x[,3]/sd(pca$x[,3])
+nv<-ncol(df)
+```
+
+```{r}
+bip<-data.frame(pc1c,pc2c,pc3c,nome,grupo=as.factor(grupo))
+texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
+)
+
+bip %>% 
+  ggplot(aes(x=pc1c, y=pc2c))+
+  geom_point() +
+  geom_point(aes(shape = grupo, color = grupo), size = 3) + theme_minimal()+
+  scale_shape_manual(values=16:19)+
+  scale_color_manual(values=c("#009E73", "#999999", "#D55E00", "#A6761D"))+
+  geom_vline(aes(xintercept=0),
+             color="black", size=1) +
+  geom_hline(aes(yintercept=0),
+             color="black", size=1) +
+  annotate(geom="segment",
+           x=rep(0,length(df)),
+           xend=texto$x,
+           y=rep(0,length(df)),
+           yend=texto$y,color="black",lwd=.5) +
+  geom_label(data=texto,aes(x=x,y=y,label=label),
+             color="black",angle=0,fontface="bold",size=4,fill="white") +
+  labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
+       y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
+       color="",shape="") +
+  theme(legend.position = "top")
+```
+
+```{r}
+ck<-sum(pca$sdev^2>=0.98)
+tabelapca<-vector()
+for( l in 1:ck) tabelapca<-cbind(tabelapca,mcor[,l])
+colnames(tabelapca)<-paste(rep(c("PC"),ck),1:ck,sep="")
+pcat<-round(tabelapca,3)
+tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
+print(tabelapca)
+```
+
+```{r}
+df_grupo <- data.frame(nome, grupo)
+df_nomes <- read_rds("data/df_nome.rds")
+df_grupo <- left_join(df_grupo,df_nomes %>% select(id_municipio, nome) ,by ="nome")
+d_sf_municipio <- st_read("shp/35MUE250GC_SIR.shp", quiet = TRUE)
+d_sf_municipio <- d_sf_municipio %>%
+  rename(id_municipio = CD_GEOCMU) %>%
+  inner_join(df_grupo %>%
+               relocate(id_municipio), "id_municipio") %>% 
+  mutate(grupo = as.factor(grupo))
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = grupo))+
+  theme_minimal() +
+  scale_fill_viridis_d()
+```
+#### Grupo 1:
+
+```{r}
+nome[grupo == 1]
+```
+#### Grupo 2:
+
+```{r}
+nome[grupo == 2]
+```
+
+#### Grupo 3:
+
+```{r}
+nome[grupo == 3]
+```
+
+#### Grupo 4:
+
+```{r}
+nome[grupo == 4]
+```
+
+
 ---
 
 **DESAFIO 7**.  Ampliar a disponibilidade hídrica e o acesso à água para a população, em especial a população pobre no meio rural
@@ -1005,10 +1384,9 @@ Temas: Governança global; Cooperação internacional; Participação da socieda
 
 ---
 
-
 # Análise multivariada
 
 ```{r}
-da <- data_set_muni %>% ungroup()
-glimpse(da)
+data_set_muni %>% glimpse()
+
 ```
