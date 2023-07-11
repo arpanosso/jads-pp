@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
   error = FALSE,
   comment = "#>"
 )
+
 ## Carregando Pacotes
 library(readxl)
 library(tidyverse)
@@ -27,15 +28,23 @@ library(ggpubr)
 library(stringr)
 library(sf)
 source("R/my-functions.R")
+df_nomes <- read_rds("data/df_nome.rds")
 theme_set(theme_bw())
 
-# 
+ 
 # pbf_valor
 # npper
 # nptem
 # pvalorpper
 # pvalortem
 
+# será que o comportamento referente a consumo de ultraprocessados é maior na regiões mais desenvolvidas ou em regiões mais pobres?
+# região de ribeirão preto ou registro
+# sera que nas regiões com maior produção de culturas alimentícias, o programa pnae tem maior efetividade ?
+# talvez seja mais fácil de enxergarmos os resultados por região, ao invés de 645 municípios
+# pois o maior objetivo é apresentar isto para os municípios, explicando que todo esse procedimento pode ser executado em âmbito municipal. Mas para estruturarmos a ferramenta temos que pensar na concretização. Nesse sentido, talvez seja mais fácil em escala regional, talvez será mais fácil visualizar as análises.
+# mas eu comecei a analisar o material que você me enviou ontem e tive essa ideia
+# então vamos ter que ir testando as coisas e aprofundando
 ```
 
 ---
@@ -56,13 +65,17 @@ Temas: Transferência de Renda; Alimentação escolar; Distribuição de aliment
 im <- read_rds("data/im.rds") %>% 
   select(nome,id_municipio:valor_pago_pbf)
 
+im <- left_join(im, df_nomes %>% 
+  select(nome, nome_regiao_intermediaria),
+  by = "nome") 
+
 # Média foi utilizada para agrupamento dos meses dentro do ano
 data_set <- im %>% filter(ano >= 2010) %>% 
   group_by(nome, ano) %>% 
   summarise(
     familias_beneficiarias_pbf =  mean(familias_beneficiarias_pbf,na.rm=TRUE),
     pessoas_beneficiarias_pbf = mean(pessoas_beneficiarias_pbf,na.rm=TRUE),
-    valor_pago_pbf=mean(valor_pago_pbf,na.rm=TRUE)
+    valor_pago_pbf = mean(valor_pago_pbf,na.rm=TRUE)
   )
 ```
 
@@ -70,8 +83,14 @@ data_set <- im %>% filter(ano >= 2010) %>%
 
 ```{r}
 # soma para cada ano das cidades
-tab_im <- data_set %>% 
-  group_by(ano) %>% filter(ano >=2010, ano < 2020) %>% 
+tab_im <- im %>% filter(ano >= 2010) %>% 
+  group_by(nome_regiao_intermediaria, nome, ano) %>% 
+  summarise(
+    familias_beneficiarias_pbf =  mean(familias_beneficiarias_pbf,na.rm=TRUE),
+    pessoas_beneficiarias_pbf = mean(pessoas_beneficiarias_pbf,na.rm=TRUE),
+    valor_pago_pbf = mean(valor_pago_pbf,na.rm=TRUE)
+  ) %>% 
+  group_by(ano, nome_regiao_intermediaria) %>% filter(ano >=2010, ano < 2020) %>% 
   summarise(
     nfamilias = sum(familias_beneficiarias_pbf, na.rm=TRUE),
     npessoa = sum(pessoas_beneficiarias_pbf, na.rm=TRUE),
@@ -79,36 +98,36 @@ tab_im <- data_set %>%
   )
 
 tab_im %>% 
-  ggplot(aes(x=ano, y=nfamilias)) +
-  geom_col(col="black",fill="lightgray")
+  ggplot(aes(x=ano, y=nfamilias, fill=nome_regiao_intermediaria)) +
+  geom_col(col="black", position = "dodge")+
+  scale_fill_viridis_d()
+  # geom_point()+
+  # geom_line()
 ```
 
 ```{r}
 tab_im %>% 
-  ggplot(aes(x=ano, y=npessoa)) +
-  geom_col(col="black",fill="lightgray")
+  ggplot(aes(x=ano, y=npessoa, fill=nome_regiao_intermediaria)) +
+  geom_col(col="black", position = "dodge") +
+  scale_fill_viridis_d()
 ```
 ```{r}
 tab_im %>% 
-  ggplot(aes(x=ano, y=valorpago)) +
-  geom_col(col="black",fill="lightgray")
-```
-
-#### Tabela de Dados
-
-```{r}
-tab_im
+  ggplot(aes(x=ano, y=valorpago, fill=nome_regiao_intermediaria)) +
+  geom_col(col="black", position = "dodge") +
+  scale_fill_viridis_d()
 ```
 
 #### Criando a base resumo
 
 ```{r}
-data_set_muni <- data_set %>% filter(ano>= 2015, ano < 2020) %>% 
-  group_by(nome) %>% 
+data_set_muni <- tab_im %>% 
+  filter(ano>= 2015, ano < 2020) %>% 
+  group_by(nome_regiao_intermediaria) %>% 
   summarise(
-    pbf_familias = mean(familias_beneficiarias_pbf, na.rm=TRUE),
-    pbf_pessoas = mean(pessoas_beneficiarias_pbf, na.rm=TRUE),
-    pbf_valor = mean(valor_pago_pbf, na.rm=TRUE)
+    pbf_familias = sum(nfamilias, na.rm=TRUE),
+    pbf_pessoas = sum(npessoa, na.rm=TRUE),
+    pbf_valor = sum(valorpago, na.rm=TRUE)
   )
 ```
 
@@ -116,7 +135,7 @@ data_set_muni <- data_set %>% filter(ano>= 2015, ano < 2020) %>%
 #### Agrupamento e Correlação
 
 ```{r}
-nome <- data_set_muni$nome
+nome <- data_set_muni$nome_regiao_intermediaria
 da <- data_set_muni
 da_pad <- decostand(da[-1] , 
                       method = "standardize",
@@ -124,8 +143,6 @@ da_pad <- decostand(da[-1] ,
 df <- da_pad
 visdat::vis_miss(da_pad)
 ```
-
-
 
 ```{r}
 da_pad_euc<-vegdist(df,"euclidean",na.rm=TRUE) 
@@ -208,20 +225,28 @@ print(tabelapca)
 ```
 
 ```{r}
-df_grupo <- data.frame(nome, grupo)
-df_nomes <- read_rds("data/df_nome.rds")
-df_grupo <- left_join(df_grupo,df_nomes %>% select(id_municipio, nome) ,by ="nome")
+df_grupo <- data.frame(nome_regiao_intermediaria = nome, grupo)
+
+df_grupo <- left_join(df_nomes %>% 
+                      select(id_municipio, nome, nome_regiao_intermediaria),
+                      df_grupo,
+                      by ="nome_regiao_intermediaria")
+
 d_sf_municipio <- st_read("shp/35MUE250GC_SIR.shp", quiet = TRUE)
+
 d_sf_municipio <- d_sf_municipio %>%
   rename(id_municipio = CD_GEOCMU) %>%
   inner_join(df_grupo %>%
                relocate(id_municipio), "id_municipio") %>% 
   mutate(grupo = as.factor(grupo))
+
 ggplot(d_sf_municipio) +
   geom_sf(aes(fill = grupo))+
   theme_minimal() +
   scale_fill_viridis_d()
 ```
+
+
 ```{r}
 glimpse(df_nomes)
 df_nomes$nome_regiao_imediata %>% unique()
