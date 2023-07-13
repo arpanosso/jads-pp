@@ -640,7 +640,7 @@ pnae_recurso <- pnae_recurso %>%
   summarise(vl_total_escolas = mean(vl_total_escolas)) %>% 
   rename(etapa_ensino = modalidade_ensino) %>% 
   filter(etapa_ensino %in% lista_etapas)
-visdat::vis_miss(pnae_recurso)
+#visdat::vis_miss(pnae_recurso)
 ```
 
 ### Visualização de dados
@@ -900,22 +900,85 @@ sisvan_estab <- left_join(sisvan_estab %>%
                             select(nome, nome_regiao_intermediaria),
                           by = "nome")
 ```
+### Visualização de dados
+
+```{r}
+sisvan <- left_join(sisvan,
+                    df_nomes %>% 
+                      select(nome, nome_regiao_intermediaria),
+                    by = "nome")
+
+glimpse(sisvan)
+coeff <- 1
+sisvan %>% 
+  group_by(ano,nome_regiao_intermediaria) %>% 
+  summarise(
+    servico_nutricao_proprio  = sum(servico_nutricao_proprio,na.rm=TRUE),
+    servico_nutricao_terceirizado = sum(servico_nutricao_terceirizado,na.rm=TRUE)   
+  ) %>% 
+      ggplot(aes(x = ano)) +
+    geom_line(aes(y = servico_nutricao_proprio), color="red") +
+    geom_line(aes(y = servico_nutricao_terceirizado/coeff)) +
+    scale_y_continuous(
+      name = "servico_nutricao_proprio",
+      sec.axis = sec_axis(~.*coeff, name="servico_nutricao_terceirizado")
+    ) +
+    facet_wrap(~ nome_regiao_intermediaria, scale="free", ncol=4) +
+    theme(axis.line.y.right = element_line(color = "red"), 
+          axis.ticks.y.right = element_line(color = "red"),
+          axis.text.y.right = element_text(color = "red"),
+          axis.title.y.right = element_text(color = "red"))
+```
+
+```{r}
+coeff <- 1
+sisvan %>% 
+  group_by(ano,nome_regiao_intermediaria) %>% 
+  summarise(
+    servico_lactario_proprio  = sum(servico_lactario_proprio,na.rm=TRUE),
+    servico_lactario_terceirizado = sum(servico_lactario_terceirizado,na.rm=TRUE)   
+  ) %>% 
+      ggplot(aes(x = ano)) +
+    geom_line(aes(y = servico_lactario_proprio), color="red") +
+    geom_line(aes(y = servico_lactario_terceirizado/coeff)) +
+    scale_y_continuous(
+      name = "servico_lactario_proprio",
+      sec.axis = sec_axis(~.*coeff, name="servico_lactario_terceirizado")
+    ) +
+    facet_wrap(~ nome_regiao_intermediaria, scale="free", ncol=4) +
+    theme(axis.line.y.right = element_line(color = "red"), 
+          axis.ticks.y.right = element_line(color = "red"),
+          axis.text.y.right = element_text(color = "red"),
+          axis.title.y.right = element_text(color = "red"))
+```
+
+```{r}
+coeff <- 1
+sisvan %>% 
+  group_by(ano,nome_regiao_intermediaria) %>% 
+  summarise(
+    servico_banco_leite_proprio  = sum(servico_banco_leite_proprio,na.rm=TRUE),
+    servico_banco_leite_terceirizado = sum(servico_banco_leite_terceirizado,na.rm=TRUE)   
+  ) %>% 
+      ggplot(aes(x = ano)) +
+    geom_line(aes(y = servico_banco_leite_proprio), color="red") +
+    geom_line(aes(y = servico_banco_leite_terceirizado/coeff)) +
+    scale_y_continuous(
+      name = "servico_banco_leite_proprio",
+      sec.axis = sec_axis(~.*coeff, name="servico_banco_leite_terceirizado")
+    ) +
+    facet_wrap(~ nome_regiao_intermediaria, scale="free", ncol=4) +
+    theme(axis.line.y.right = element_line(color = "red"), 
+          axis.ticks.y.right = element_line(color = "red"),
+          axis.text.y.right = element_text(color = "red"),
+          axis.title.y.right = element_text(color = "red"))
+```
 
 
 ```{r}
 data_set <- left_join(data_set, sisvan, by = c("ano","nome"))
 # data_set
 ```
-
-### Visualização de dados
-
-```{r}
-sisvan <- left_join(sisvan, df_nomes %>% 
-            select(nome, nome_regiao_intermediaria),
-          by = "nome") %>% 
-  relocate(nome, nome_regiao_intermediaria)
-```
-
 
 
 
