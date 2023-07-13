@@ -1,5 +1,5 @@
 ---
-title: "multivariada02"
+title: "multivariada03"
 author: "Panosso AR & Oliveira JA"
 date: "2023-07-12"
 output:
@@ -102,7 +102,7 @@ tab_im <- im %>% filter(ano >= 2010) %>%
 
 tab_im %>% 
   ggplot(aes(x=ano, y=nfamilias, fill=nome_regiao_intermediaria)) +
-  geom_col(col="black", position = "dodge")+
+  geom_col(col="black", position = "dodge") +
   scale_fill_viridis_d()
   # geom_point()+
   # geom_line()
@@ -114,12 +114,15 @@ tab_im %>%
   geom_col(col="black", position = "dodge") +
   scale_fill_viridis_d()
 ```
+
+
 ```{r}
 tab_im %>% 
   ggplot(aes(x=ano, y=valorpago, fill=nome_regiao_intermediaria)) +
   geom_col(col="black", position = "dodge") +
   scale_fill_viridis_d()
 ```
+
 
 #### Criando a base resumo
 
@@ -225,6 +228,7 @@ tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
 print(tabelapca)
 ```
 
+
 ```{r}
 df_grupo <- data.frame(nome_regiao_intermediaria = nome, grupo)
 
@@ -288,11 +292,15 @@ Temas: Fortalecimento da agricultura familiar; Reforma agrária; Transição agr
 lavoura_permanente <- read_rds("data/permanente.rds") 
 lavoura_temporaria <- read_rds("data/temporaria.rds")
 lavouras <- rbind(lavoura_permanente %>% 
-        mutate(tipo = "permanente"),
-      lavoura_temporaria %>% 
-        mutate(tipo = "temporaria")
-      )
-lavouras$na <- apply(lavouras[5:12],1, function(x) sum(is.na(x)))
+                    mutate(tipo = "permanente"),
+                  lavoura_temporaria %>% 
+                    mutate(tipo = "temporaria")
+)
+lavouras$na <- apply(
+  lavouras[5:12],
+  1, 
+  function(x) sum(is.na(x))
+)
 ```
 
 ### Visualização de dados
@@ -350,12 +358,18 @@ coeff <-1
 tabe_lavouras <- lavouras %>% 
   group_by(ano, nome_regiao_intermediaria) %>%
   summarise(
-    n_produtos_permanente = mean(n_produtos_permanente,na.rm=TRUE),
-    n_produtos_temporaria = mean(n_produtos_temporaria,na.rm=TRUE),
-    area_plantada_permanente = mean(area_plantada_permanente,na.rm=TRUE),
-    area_plantada_temporaria = mean(area_plantada_temporaria,na.rm=TRUE),
-    rendimento_medio_permanente = mean(rendimento_medio_permanente,na.rm=TRUE),
-    rendimento_medio_temporaria = mean(rendimento_medio_temporaria,na.rm=TRUE),
+    n_produtos_permanente = 
+      mean(n_produtos_permanente,na.rm=TRUE),
+    n_produtos_temporaria = 
+      mean(n_produtos_temporaria,na.rm=TRUE),
+    area_plantada_permanente = 
+      mean(area_plantada_permanente,na.rm=TRUE),
+    area_plantada_temporaria = 
+      mean(area_plantada_temporaria,na.rm=TRUE),
+    rendimento_medio_permanente = 
+      mean(rendimento_medio_permanente,na.rm=TRUE),
+    rendimento_medio_temporaria = 
+      mean(rendimento_medio_temporaria,na.rm=TRUE),
     prop_area_colhida_permanente =
       mean(prop_area_colhida_permanente,na.rm=TRUE),
     prop_area_colhida_temporaria =
@@ -434,6 +448,7 @@ tabe_lavouras %>%
   facet_wrap(~nome_regiao_intermediaria, scales = "free", ncol=4)
 ```
 
+
 ```{r}
 tabe_lavouras %>% 
   ggplot(aes(x = ano)) +
@@ -449,8 +464,6 @@ tabe_lavouras %>%
         axis.title.y.right = element_text(color = "red")) +
   facet_wrap(~nome_regiao_intermediaria, scales = "free", ncol=4)
 ```
-
-
 
 #### Criando a base resumo
 
@@ -491,6 +504,7 @@ nome <- da %>% drop_na() %>%  pull(nome_regiao_intermediaria)
 visdat::vis_miss(da_pad)
 ```
 
+
 ```{r}
 row.names(df) <- nome
 da_pad_euc<-vegdist(df,"euclidean",na.rm=TRUE) 
@@ -501,10 +515,12 @@ ggdendrogram(da_pad_euc_ward, rotate = TRUE, size = 2)
 ```
 
 
+
 ```{r}
 cor_matrix <- cor(df,use = "na.or.complete")
 corrplot(cor_matrix, method="ellipse")
 ```
+
 
 - Variáveis altamente correlacionadas, apenas uma delas representa bem esse banco de dados
 
@@ -530,6 +546,7 @@ pc2c<-pca$x[,2]/sd(pca$x[,2])
 pc3c<-pca$x[,3]/sd(pca$x[,3])
 nv<-ncol(df)
 ```
+
 
 ```{r}
 bip<-data.frame(pc1c,pc2c,pc3c,nome,grupo=as.factor(grupo))
@@ -568,6 +585,7 @@ pcat<-round(tabelapca,3)
 tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
 print(tabelapca)
 ```
+
 
 ```{r}
 df_grupo <- data.frame(nome_regiao_intermediaria = nome, grupo)
@@ -666,10 +684,7 @@ tab_pane <- pnae %>%
 ```{r}
 coeff <- 1/.009
 nri <- tab_pane$nome_regiao_intermediaria %>%  unique()
-
-for(i in seq_along(nri)){
-  ee <- nri[i]
-  mplot <- tab_pane %>% filter(nome_regiao_intermediaria == ee) %>% 
+map(nri, ~{tab_pane %>% filter(nome_regiao_intermediaria == .x) %>% 
     ggplot(aes(x = ano)) +
     geom_line(aes(y = qt_alunos_pnae), color="red") +
     geom_line(aes(y = vl_total_escolas/coeff)) +
@@ -682,9 +697,8 @@ for(i in seq_along(nri)){
           axis.ticks.y.right = element_line(color = "red"),
           axis.text.y.right = element_text(color = "red"),
           axis.title.y.right = element_text(color = "red"))+
-    labs(title = ee)
-  print(mplot)
-}
+    labs(title = .x)})
+
 ```
 
 
@@ -818,7 +832,8 @@ bip %>%
   labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
        y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
        color="",shape="") +
-  theme(legend.position = "top")
+  theme(legend.position = "top")+
+  coord_cartesian(xlim=c(-20,300))
 ```
 
 ```{r}
@@ -900,6 +915,7 @@ sisvan_estab <- left_join(sisvan_estab %>%
                             select(nome, nome_regiao_intermediaria),
                           by = "nome")
 ```
+
 ### Visualização de dados
 
 ```{r}
@@ -1089,7 +1105,8 @@ bip %>%
   labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
        y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
        color="",shape="") +
-  theme(legend.position = "top")
+  theme(legend.position = "top") +
+  coord_cartesian(xlim=c(-10,40))
 ```
 
 ```{r}
@@ -1189,12 +1206,12 @@ estado_nutricional <- read_rds("data/df_final.rds") %>%
 
 ```{r}
 estado_nutricional <- left_join(estado_nutricional, 
-                                df_nome %>% select(nome, id_municipio_6,nome_regiao_intermediaria) %>% 
+                                df_nomes %>% select(nome, id_municipio_6,nome_regiao_intermediaria) %>% 
                        rename(id_municipio  = id_municipio_6),
                      by = c("id_municipio")) %>% 
   select(-regiao,-uf,-codigo_uf,-id_municipio,-municipio,-indice_cri,
-         -indice_ado,-valor) %>% relocate(ano,nome) %>% 
-  pivot_wider(names_from = c(fase_da_vida,idade,indice,classe),
+         -indice_ado,-valor) %>% relocate(ano,nome,nome_regiao_intermediaria) %>% 
+  pivot_wider(names_from = c(fase_da_vida, idade, indice, classe),
               values_from = c(valor_p)) %>% 
   janitor::clean_names()
 ```
@@ -1276,94 +1293,59 @@ estado_nutri_resumo <- estado_nutri_resumo %>%
   rename_at(vars(nomes_antigos), ~novos_nomes)
 ```
 
-7. Consumo   
-7.1 Consumo de ultra processados **(OK)** 
-7.1.2 Consumo embutidos  **(OK)**
-7.1.3 Consumo processados  **(OK)**
-
 ```{r}
-consumo <- read_rds("data/consumo/consumo.rds")
-consumo <- left_join(consumo, df_nome %>% select(nome, id_municipio_6) %>% 
-                       rename(codigo_ibge = id_municipio_6) %>%
-                       mutate(codigo_ibge = as.numeric(codigo_ibge)),
-                     by = c("codigo_ibge"))
-#consumo$tipo_relatorio %>%  unique()
-
-tipos_relat <- c("CONS_ULTRA","CONS_EMBUT")
-
-consumo <- consumo %>% select(-faixa_etaria, -codigo_ibge, -municipio,
-                   -uf, -total, -monitorados) %>% 
-  filter(tipo_relatorio %in% tipos_relat,
-         fase_da_vida != "entre-6-meses-23-meses")
-
-consumo <- consumo %>% 
-  pivot_wider(names_from = c(fase_da_vida,tipo_relatorio),
-              values_from = percent) %>% 
-  janitor::clean_names()
-```
-
-
-
-```{r}
-consumo_estado_nutricional <- left_join(consumo, estado_nutricional,
-          by=c("ano","nome"))
-data_set <- left_join(data_set,consumo_estado_nutricional,
-          by=c("ano","nome")) %>% 
-  select(-municipio)
-#glimpse(data_set)
-
-consumo_resumo <- consumo %>% 
-  group_by(nome) %>% 
-  summarise(
-    adol_embut = mean(adolecentes_cons_embut,na.rm=TRUE),  
-    adol_ultra = mean(adolecentes_cons_ultra,na.rm=TRUE), 
-    adul_embut = mean(adultos_cons_embut,na.rm=TRUE), 
-    adul_ultra = mean(adultos_cons_ultra,na.rm=TRUE),     
-    cri24_embut = mean(criancas_2_4_cons_embut,na.rm=TRUE),
-    cri24_ultra = mean(criancas_2_4_cons_ultra,na.rm=TRUE), 
-    cri59_embut = mean(criancas_5_9_cons_embut,na.rm=TRUE),
-    cri59_ultra = mean(criancas_5_9_cons_ultra,na.rm=TRUE),
-    ido_embut = mean(idosos_cons_embut,na.rm=TRUE),      
-    ido_ultra = mean(idosos_cons_ultra,na.rm=TRUE)      
-  )
-
-consumo_estado_nutricional_resumo <- left_join(estado_nutri_resumo, consumo_resumo,
-          by = "nome") 
-data_set_muni <- left_join(data_set_muni,
-                           consumo_estado_nutricional_resumo,
-                           by = "nome")
+estado_nutri_resumo %>%
+  group_by(nome_regiao_intermediaria) %>% 
+    mutate(across(where(is.numeric), function(x) {
+    med <- mean(x,na.rm=TRUE)
+    x[is.na(x)] <- med
+    x
+  }))
 ```
 
 
 #### Agrupamento e Correlação
 
+
+
+
 ```{r}
-da <- consumo_resumo
+da <- estado_nutri_resumo %>%
+  group_by(nome_regiao_intermediaria) %>% 
+    mutate(across(where(is.numeric), function(x) {
+    mean(x,na.rm=TRUE)
+    }))  %>% select(-nome) %>% 
+  distinct() %>% ungroup()
+
 da_pad <- decostand(da[-1] , 
                       method = "standardize",
                       na.rm=TRUE)
-df <- da_pad %>% 
-  drop_na()
-nome <- da %>%  drop_na() %>%  pull(nome)
 visdat::vis_miss(da_pad)
 ```
 
+
 ```{r}
+df <- da_pad %>% 
+  select(cri04pxi_mb,cri04pxi_a,adolaxi_b,adolaxi_a,adulimc_b,adulimc_a,adulimc_obesg_i,adulimc_obesg_ii)
+row.names(df) <- da$nome_regiao_intermediaria
 da_pad_euc<-vegdist(df,"euclidean",na.rm=TRUE) 
 da_pad_euc_ward<-hclust(da_pad_euc, method="ward.D")
-plot(da_pad_euc_ward, 
-     ylab="Distância Euclidiana",
-     xlab="Acessos", hang=-1,
-     col="blue", las=1,
-     cex=.6,lwd=1.5);box()
-grupo<-cutree(da_pad_euc_ward,4)
+grupo<-cutree(da_pad_euc_ward,3)
+n_grupo <- length(unique(grupo))
+ggdendrogram(da_pad_euc_ward, rotate = TRUE, size = 2) 
 ```
+
 
 
 ```{r}
-cor_matrix <- cor(df, use = "na.or.complete")
+cor_matrix <- cor(df,use = "na.or.complete")
 corrplot(cor_matrix, method="ellipse")
 ```
+
+
+- Variáveis altamente correlacionadas, apenas uma delas representa bem esse banco de dados
+
+
 ```{r}
 pca <-  prcomp(df,
                scale=T)
@@ -1386,6 +1368,7 @@ pc3c<-pca$x[,3]/sd(pca$x[,3])
 nv<-ncol(df)
 ```
 
+
 ```{r}
 bip<-data.frame(pc1c,pc2c,pc3c,nome,grupo=as.factor(grupo))
 texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
@@ -1395,8 +1378,8 @@ bip %>%
   ggplot(aes(x=pc1c, y=pc2c))+
   geom_point() +
   geom_point(aes(shape = grupo, color = grupo), size = 3) + theme_minimal()+
-  scale_shape_manual(values=16:19)+
-  scale_color_manual(values=c("#009E73", "#999999", "#D55E00", "#A6761D"))+
+  scale_shape_manual(values=16:(15+n_grupo)) +
+  scale_colour_brewer(palette = "Set1") +
   geom_vline(aes(xintercept=0),
              color="black", size=1) +
   geom_hline(aes(yintercept=0),
@@ -1411,11 +1394,12 @@ bip %>%
   labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
        y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
        color="",shape="") +
-  theme(legend.position = "top")
+  theme(legend.position = "top") +
+  coord_cartesian(xlim=c(-2,3))
 ```
 
 ```{r}
-ck<-sum(pca$sdev^2>=0.98)
+ck<-sum(pca$sdev^2>=1)
 tabelapca<-vector()
 for( l in 1:ck) tabelapca<-cbind(tabelapca,mcor[,l])
 colnames(tabelapca)<-paste(rep(c("PC"),ck),1:ck,sep="")
@@ -1424,43 +1408,239 @@ tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
 print(tabelapca)
 ```
 
+
 ```{r}
-df_grupo <- data.frame(nome, grupo)
-df_nomes <- read_rds("data/df_nome.rds")
-df_grupo <- left_join(df_grupo,df_nomes %>% select(id_municipio, nome) ,by ="nome")
+df_grupo <- data.frame(nome_regiao_intermediaria = nome, grupo)
+
+df_grupo <- left_join(df_nomes %>% 
+                      select(id_municipio, nome, nome_regiao_intermediaria),
+                      df_grupo,
+                      by ="nome_regiao_intermediaria")
+
 d_sf_municipio <- st_read("shp/35MUE250GC_SIR.shp", quiet = TRUE)
+
 d_sf_municipio <- d_sf_municipio %>%
   rename(id_municipio = CD_GEOCMU) %>%
   inner_join(df_grupo %>%
                relocate(id_municipio), "id_municipio") %>% 
   mutate(grupo = as.factor(grupo))
+
 ggplot(d_sf_municipio) +
   geom_sf(aes(fill = grupo))+
   theme_minimal() +
   scale_fill_viridis_d()
 ```
-#### Grupo 1:
+
 
 ```{r}
-nome[grupo == 1]
+for(i in 1:n_grupo){
+  print("===============")
+  print(paste0("Grupo ",i,""))
+  print("===============")
+  print(paste(nome[grupo == i],collapse = "; "))
+  cat("\n")
+}
 ```
-#### Grupo 2:
+
+
+
+7. Consumo   
+7.1 Consumo de ultra processados **(OK)** 
+7.1.2 Consumo embutidos  **(OK)**
+7.1.3 Consumo processados  **(OK)**
 
 ```{r}
-nome[grupo == 2]
+consumo <- read_rds("data/consumo/consumo.rds")
+consumo <- left_join(consumo, df_nomes %>% select(nome, id_municipio_6, nome_regiao_intermediaria) %>% 
+                       rename(codigo_ibge = id_municipio_6) %>%
+                       mutate(codigo_ibge = as.numeric(codigo_ibge)),
+                     by = c("codigo_ibge"))
+#consumo$tipo_relatorio %>%  unique()
+
+tipos_relat <- c("CONS_ULTRA","CONS_EMBUT")
+
+consumo <- consumo %>% select(-faixa_etaria, -codigo_ibge, -municipio,
+                   -uf, -total, -monitorados) %>% 
+  filter(tipo_relatorio %in% tipos_relat,
+         fase_da_vida != "entre-6-meses-23-meses")
+
+consumo <- consumo %>% 
+  pivot_wider(names_from = c(fase_da_vida,tipo_relatorio),
+              values_from = percent) %>% 
+  janitor::clean_names()
 ```
 
-#### Grupo 3:
+
 
 ```{r}
-nome[grupo == 3]
+consumo_estado_nutricional <- left_join(consumo, estado_nutricional,
+          by=c("ano","nome","nome_regiao_intermediaria"))
+
+consumo_resumo <- consumo %>% 
+  group_by(nome_regiao_intermediaria, nome) %>% 
+  summarise(
+    adol_embut = mean(adolecentes_cons_embut,na.rm=TRUE),  
+    adol_ultra = mean(adolecentes_cons_ultra,na.rm=TRUE), 
+    adul_embut = mean(adultos_cons_embut,na.rm=TRUE), 
+    adul_ultra = mean(adultos_cons_ultra,na.rm=TRUE),     
+    cri24_embut = mean(criancas_2_4_cons_embut,na.rm=TRUE),
+    cri24_ultra = mean(criancas_2_4_cons_ultra,na.rm=TRUE), 
+    cri59_embut = mean(criancas_5_9_cons_embut,na.rm=TRUE),
+    cri59_ultra = mean(criancas_5_9_cons_ultra,na.rm=TRUE),
+    ido_embut = mean(idosos_cons_embut,na.rm=TRUE),      
+    ido_ultra = mean(idosos_cons_ultra,na.rm=TRUE)      
+  )
+
+consumo_estado_nutricional_resumo <- left_join(estado_nutri_resumo, consumo_resumo,
+          by = c("nome","nome_regiao_intermediaria")) 
 ```
 
-#### Grupo 4:
+
+#### Agrupamento e Correlação
+
+
+
 
 ```{r}
-nome[grupo == 4]
+da <- consumo_estado_nutricional_resumo %>%
+  group_by(nome_regiao_intermediaria) %>% 
+    mutate(across(where(is.numeric), function(x) {
+    mean(x,na.rm=TRUE)
+    }))  %>% select(-nome) %>% 
+  distinct() %>% ungroup()
+
+da_pad <- decostand(da[-1] , 
+                      method = "standardize",
+                      na.rm=TRUE)
+visdat::vis_miss(da_pad)
 ```
+
+
+```{r}
+df <- da_pad %>% 
+  select(cri04pxi_mb,cri04pxi_a,adolaxi_b,adolaxi_a,adulimc_b,adulimc_a,adulimc_obesg_i,adulimc_obesg_ii,adol_ultra,adul_ultra,cri59_ultra,ido_ultra)
+row.names(df) <- da$nome_regiao_intermediaria
+da_pad_euc<-vegdist(df,"euclidean",na.rm=TRUE) 
+da_pad_euc_ward<-hclust(da_pad_euc, method="ward.D")
+grupo<-cutree(da_pad_euc_ward,3)
+n_grupo <- length(unique(grupo))
+ggdendrogram(da_pad_euc_ward, rotate = TRUE, size = 2) 
+```
+
+
+
+```{r}
+cor_matrix <- cor(df,use = "na.or.complete")
+corrplot(cor_matrix, method="ellipse")
+```
+
+
+- Variáveis altamente correlacionadas, apenas uma delas representa bem esse banco de dados
+
+
+```{r}
+pca <-  prcomp(df,
+               scale=T)
+# Autovalores
+eig<-pca$sdev^2
+print(round(eig,3))
+ve<-eig/sum(eig)
+print(round(ve,4))
+print(round(cumsum(ve),4)*100)
+mcor<-cor(df,pca$x)
+corrplot(mcor)
+screeplot(pca)
+abline(h=1)
+pc1V<-cor(df,pca$x)[,1]/sd(cor(df,pca$x)[,1])
+pc2V<-cor(df,pca$x)[,2]/sd(cor(df,pca$x)[,2])
+pc3V<-cor(df,pca$x)[,3]/sd(cor(df,pca$x)[,3])
+pc1c<-pca$x[,1]/sd(pca$x[,1])
+pc2c<-pca$x[,2]/sd(pca$x[,2])
+pc3c<-pca$x[,3]/sd(pca$x[,3])
+nv<-ncol(df)
+```
+
+
+```{r}
+bip<-data.frame(pc1c,pc2c,pc3c,nome,grupo=as.factor(grupo))
+texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
+)
+
+bip %>% 
+  ggplot(aes(x=pc1c, y=pc2c))+
+  geom_point() +
+  geom_point(aes(shape = grupo, color = grupo), size = 3) + theme_minimal()+
+  scale_shape_manual(values=16:(15+n_grupo)) +
+  scale_colour_brewer(palette = "Set1") +
+  geom_vline(aes(xintercept=0),
+             color="black", size=1) +
+  geom_hline(aes(yintercept=0),
+             color="black", size=1) +
+  annotate(geom="segment",
+           x=rep(0,length(df)),
+           xend=texto$x,
+           y=rep(0,length(df)),
+           yend=texto$y,color="black",lwd=.5) +
+  geom_label(data=texto,aes(x=x,y=y,label=label),
+             color="black",angle=0,fontface="bold",size=4,fill="white") +
+  labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
+       y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
+       color="",shape="") +
+  theme(legend.position = "top") +
+  coord_cartesian(xlim=c(-3,2))
+```
+
+```{r}
+ck<-sum(pca$sdev^2>=1)
+tabelapca<-vector()
+for( l in 1:ck) tabelapca<-cbind(tabelapca,mcor[,l])
+colnames(tabelapca)<-paste(rep(c("PC"),ck),1:ck,sep="")
+pcat<-round(tabelapca,3)
+tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
+print(tabelapca)
+```
+
+
+```{r}
+df_grupo <- data.frame(nome_regiao_intermediaria = nome, grupo)
+
+df_grupo <- left_join(df_nomes %>% 
+                      select(id_municipio, nome, nome_regiao_intermediaria),
+                      df_grupo,
+                      by ="nome_regiao_intermediaria")
+
+d_sf_municipio <- st_read("shp/35MUE250GC_SIR.shp", quiet = TRUE)
+
+d_sf_municipio <- d_sf_municipio %>%
+  rename(id_municipio = CD_GEOCMU) %>%
+  inner_join(df_grupo %>%
+               relocate(id_municipio), "id_municipio") %>% 
+  mutate(grupo = as.factor(grupo))
+
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = grupo))+
+  theme_minimal() +
+  scale_fill_viridis_d()
+```
+
+
+```{r}
+for(i in 1:n_grupo){
+  print("===============")
+  print(paste0("Grupo ",i,""))
+  print("===============")
+  print(paste(nome[grupo == i],collapse = "; "))
+  cat("\n")
+}
+```
+
+
+
+
+
+
+
+
 
 
 ---
@@ -1510,9 +1690,3 @@ Temas: Governança global; Cooperação internacional; Participação da socieda
 
 ---
 
-# Análise multivariada
-
-```{r}
-data_set_muni %>% glimpse()
-
-```
