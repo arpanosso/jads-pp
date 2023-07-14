@@ -46,7 +46,6 @@ im <- left_join(im,
           by = "nome") %>% 
   relocate(nome)
 
-
 tab_im <- im %>% filter(ano >= 2010) %>% 
   group_by(nome, ano) %>% 
   summarise(
@@ -81,6 +80,7 @@ lavouras <- rbind(lavoura_permanente %>%
                   lavoura_temporaria %>% 
                     mutate(tipo = "temporaria")
 )
+
 lavouras$na <- apply(
   lavouras[5:12],
   1, 
@@ -105,7 +105,6 @@ lavouras <- lavouras %>%
   pivot_wider(names_from = tipo,
               values_from = n_produtos:prop_valor_producao)
 
-
 lavouras <- left_join(lavouras, df_nomes %>% 
   select(nome),
   by = "nome") %>% 
@@ -120,7 +119,7 @@ lavouras_resu <- lavouras %>%
     areapltem  = mean(area_plantada_temporaria,na.rm=TRUE),      
     rendper = mean(rendimento_medio_permanente,na.rm=TRUE),     
     rendtem = mean(rendimento_medio_temporaria,na.rm=TRUE),    
-    pacolhidaper = mean(prop_area_colhida_permanente,na.rm=TRUE),     
+    pacolhidaper = mean(prop_area_colhida_permanente,na.rm=TRUE),   
     pacolhidatem = mean(prop_area_colhida_temporaria,na.rm=TRUE),   
     pvalorpper  = mean(prop_valor_producao_permanente,na.rm=TRUE),  
     pvalortem = mean(prop_valor_producao_temporaria,na.rm=TRUE) 
@@ -142,75 +141,48 @@ visdat::vis_miss(base_multivariada)
 
 ```{r}
 pnae_alunos <- read_rds("data/pnae_alunos_atendidos.rds")
-lista_etapas <- pnae_alunos$etapa_ensino %>% unique()
 pnae_recurso <- read_rds("data/pnae_recurso.rds") 
-pnae_recurso <- pnae_recurso %>% 
-  mutate(
-    modalidade_ensino = ifelse(modalidade_ensino == "EJA",
-                               "EDUCAÇÃO DE JOVENS E ADULTOS (EJA)",
-                               modalidade_ensino)
-  )
 ```
 
 
 ```{r}
 pnae_recurso <- pnae_recurso %>% 
-  group_by(nome, ano, esfera_governo, modalidade_ensino) %>% 
-  summarise(vl_total_escolas = mean(vl_total_escolas)) %>% 
-  rename(etapa_ensino = modalidade_ensino) %>% 
-  filter(etapa_ensino %in% lista_etapas)
+  group_by(nome, ano, esfera_governo) %>% 
+  summarise(vl_total_escolas = sum(vl_total_escolas))
+```
 
+
+```{r}
 pnae <- left_join(pnae_alunos %>% filter(esfera_governo == "MUNICIPAL") %>%
           select(ano:qt_alunos_pnae,nome),
         pnae_recurso,
-        by =c("nome","ano","esfera_governo","etapa_ensino"))
+        by =c("nome","ano","esfera_governo"))
+```
 
+
+```{r}
 pnae <- left_join(pnae, df_nomes %>% 
   select(nome),
   by = "nome") 
 ```
 
-
-
 ```{r}
 pnae_resumo <- pnae %>% 
-  # filter(ano >= 2010, ano <= 2020) %>% 
-  # drop_na() %>% 
-  group_by(ano, nome, etapa_ensino) %>% 
+  group_by(ano, nome) %>% 
   summarise(
     qt_alunos_pnae = sum(qt_alunos_pnae,na.rm=TRUE),
     vl_total_escolas = sum(vl_total_escolas,na.rm=TRUE)
-  ) %>% 
-  pivot_wider(
-    names_from =  etapa_ensino,
-    values_from = c(qt_alunos_pnae,vl_total_escolas)) %>% 
-  janitor::clean_names() %>% 
-  filter(ano == 2007) %>% 
-  ungroup() %>% 
-  select(-ano)
+  )  %>% 
+  group_by(nome) %>% 
+  summarise(
+    qt_alunos_pnae = sum(qt_alunos_pnae,na.rm=TRUE),
+    vl_total_escolas = sum(vl_total_escolas,na.rm=TRUE)
+  )
 ```
 
 
 ```{r}
-pnae_resumo <- pnae_resumo %>% 
-  select(-qt_alunos_pnae_ensino_medio,
-         -qt_alunos_pnae_indigena,
-         -qt_alunos_pnae_quilombola,
-         -vl_total_escolas_ensino_medio,
-         -vl_total_escolas_indigena,
-         -vl_total_escolas_quilombola
-         )
-
-nomes_antigos <- names(pnae_resumo)
-nomes_novos <- c(
-  "nome", "qt_creche", "qt_eja", "qt_fundamental",                         
-  "qt_pre_escola", "qt_aee", "vl_creche", "vl_eja",         
-  "vl_fundamental", "vl_pre_escola", "vl_aee")
-pnae_resumo <- pnae_resumo %>% 
-  rename_at(vars(nomes_antigos),~nomes_novos)
-
-
-base_multivariada<-left_join(base_multivariada,
+base_multivariada <- left_join(base_multivariada,
           pnae_resumo,
           by = "nome")
 visdat::vis_miss(base_multivariada)
@@ -395,7 +367,7 @@ da_pad <- decostand(da[-1] ,
 row.names(da_pad) <- base_multivariada_final$nome_regiao_imediata
 da_pad_euc<-vegdist(da_pad,"euclidean",na.rm=TRUE) 
 da_pad_euc_ward<-hclust(da_pad_euc, method="ward.D")
-grupo<-cutree(da_pad_euc_ward,4)
+grupo<-cutree(da_pad_euc_ward,5)
 n_grupo <- length(unique(grupo))
 ggdendrogram(da_pad_euc_ward, rotate = TRUE, size = 2) 
 ```
@@ -456,7 +428,8 @@ bip %>%
        y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
        color="",shape="") +
   theme(legend.position = "top") +
-  coord_cartesian(xlim=c(-2,3))
+  coord_cartesian(xlim=c(-2,3),
+                  ylim=c(-2.5,2.5))
 ```
 
 ```{r}
@@ -471,12 +444,12 @@ print(tabelapca)
 
 
 ```{r}
-df_grupo <- data.frame(nome_regiao_imediata = row.names(da_pad), grupo)
+df_grupo <- data.frame(nome = base_multivariada$nome, grupo)
 
 df_grupo <- left_join(df_nomes %>% 
-                      select(id_municipio, nome, nome_regiao_imediata),
+                      select(id_municipio, nome),
                       df_grupo,
-                      by ="nome_regiao_imediata")
+                      by ="nome")
 
 d_sf_municipio <- st_read("shp/35MUE250GC_SIR.shp", quiet = TRUE)
 
@@ -495,7 +468,7 @@ ggplot(d_sf_municipio) +
 
 ```{r}
 n_grupo <- length(unique(grupo))
-nome <- row.names(da_pad)
+nome <- base_multivariada$nome
 for(i in 1:n_grupo){
   print("===============")
   print(paste0("Grupo ",i,""))
