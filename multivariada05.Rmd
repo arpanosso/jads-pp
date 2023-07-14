@@ -1,0 +1,526 @@
+---
+title: "multivariada05"
+author: "Panosso AR & Oliveira JA"
+date: "2023-07-14"
+output:
+  word_document: default
+  html_document: default
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  error = FALSE,
+  comment = "#>"
+)
+
+library(readxl)
+library(tidyverse)
+library(ggdendro)
+library(vegan)
+library(corrplot)
+library(bit64)
+library(ggpubr)
+library(stringr)
+library(sf)
+source("R/my-functions.R")
+df_nomes <- read_rds("data/df_nome.rds")
+theme_set(theme_bw())
+```
+
+---
+
+### Base de dados - "im"
+
+```{r}
+# Carregando a base de dados
+im <- read_rds("data/im.rds") %>% 
+  select(nome,id_municipio:valor_pago_pbf)
+
+im <- left_join(im,
+          df_nomes %>% 
+          select(nome, nome_regiao_imediata),
+          by = "nome") %>% 
+  relocate(nome, nome_regiao_imediata)
+
+
+tab_im <- im %>% filter(ano >= 2010) %>% 
+  group_by(nome_regiao_imediata, nome, ano) %>% 
+  summarise(
+    familias_beneficiarias_pbf =  mean(familias_beneficiarias_pbf,na.rm=TRUE),
+    pessoas_beneficiarias_pbf = mean(pessoas_beneficiarias_pbf,na.rm=TRUE),
+    valor_pago_pbf = mean(valor_pago_pbf,na.rm=TRUE)
+  ) %>% 
+  group_by(ano, nome_regiao_imediata) %>% filter(ano >=2010, ano < 2020) %>% 
+  summarise(
+    nfamilias = sum(familias_beneficiarias_pbf, na.rm=TRUE),
+    npessoa = sum(pessoas_beneficiarias_pbf, na.rm=TRUE),
+    valorpago = sum(valor_pago_pbf, na.rm=TRUE),
+  )
+
+base_multivariada <- tab_im %>% 
+  filter(ano>= 2015, ano < 2020) %>% 
+  group_by(nome_regiao_imediata) %>% 
+  summarise(
+    pbf_valor = sum(valorpago, na.rm=TRUE)
+  )
+visdat::vis_miss(base_multivariada)
+```
+
+
+### Base de dados "lavouras"
+
+```{r}
+lavoura_permanente <- read_rds("data/permanente.rds") 
+lavoura_temporaria <- read_rds("data/temporaria.rds")
+lavouras <- rbind(lavoura_permanente %>% 
+                    mutate(tipo = "permanente"),
+                  lavoura_temporaria %>% 
+                    mutate(tipo = "temporaria")
+)
+lavouras$na <- apply(
+  lavouras[5:12],
+  1, 
+  function(x) sum(is.na(x))
+)
+
+lavouras <- lavouras %>% 
+  filter(na != 8, ano >= 2010,
+         produto != "Café (em grão) Arábica",
+         produto != "Café (em grão) Canephora") %>% 
+  select(-na)
+
+lavouras <- lavouras %>% 
+  group_by(tipo, ano, nome) %>% 
+  summarise(
+    n_produtos = n(),
+    area_plantada = sum(area_plantada,na.rm=TRUE),
+    rendimento_medio = mean(rendimento_medio,na.rm=TRUE),
+    prop_area_colhida = mean(prop_area_colhida,na.rm=TRUE) ,
+    prop_valor_producao = mean(prop_valor_producao,na.rm=TRUE)
+  ) %>% 
+  pivot_wider(names_from = tipo,
+              values_from = n_produtos:prop_valor_producao)
+
+
+lavouras <- left_join(lavouras, df_nomes %>% 
+  select(nome, nome_regiao_imediata),
+  by = "nome") %>% 
+  relocate(ano, nome, nome_regiao_imediata)
+
+lavouras_resu <- lavouras %>% 
+  group_by(nome_regiao_imediata) %>% 
+  summarize(
+    npper = mean(n_produtos_permanente,na.rm=TRUE),           
+    nptem = mean(n_produtos_temporaria,na.rm=TRUE),         
+    areapper   = mean(area_plantada_permanente,na.rm=TRUE),       
+    areapltem  = mean(area_plantada_temporaria,na.rm=TRUE),      
+    rendper = mean(rendimento_medio_permanente,na.rm=TRUE),     
+    rendtem = mean(rendimento_medio_temporaria,na.rm=TRUE),    
+    pacolhidaper = mean(prop_area_colhida_permanente,na.rm=TRUE),     
+    pacolhidatem = mean(prop_area_colhida_temporaria,na.rm=TRUE),   
+    pvalorpper  = mean(prop_valor_producao_permanente,na.rm=TRUE),  
+    pvalortem = mean(prop_valor_producao_temporaria,na.rm=TRUE) 
+  )
+
+base_multivariada <- left_join(base_multivariada,
+          lavouras_resu %>% 
+            select(nome_regiao_imediata,
+                   pvalorpper,
+                   pvalortem,
+                   rendper,
+                   rendtem),
+          by = "nome_regiao_imediata")
+
+visdat::vis_miss(base_multivariada)
+```
+
+### Base de dados - "pnae"
+
+```{r}
+pnae_alunos <- read_rds("data/pnae_alunos_atendidos.rds")
+lista_etapas <- pnae_alunos$etapa_ensino %>% unique()
+pnae_recurso <- read_rds("data/pnae_recurso.rds") 
+pnae_recurso <- pnae_recurso %>% 
+  mutate(
+    modalidade_ensino = ifelse(modalidade_ensino == "EJA",
+                               "EDUCAÇÃO DE JOVENS E ADULTOS (EJA)",
+                               modalidade_ensino)
+  )
+```
+
+
+```{r}
+pnae_recurso <- pnae_recurso %>% 
+  group_by(nome, ano, esfera_governo, modalidade_ensino) %>% 
+  summarise(vl_total_escolas = mean(vl_total_escolas)) %>% 
+  rename(etapa_ensino = modalidade_ensino) %>% 
+  filter(etapa_ensino %in% lista_etapas)
+
+pnae <- left_join(pnae_alunos %>% filter(esfera_governo == "MUNICIPAL") %>%
+          select(ano:qt_alunos_pnae,nome),
+        pnae_recurso,
+        by =c("nome","ano","esfera_governo","etapa_ensino"))
+
+pnae <- left_join(pnae, df_nomes %>% 
+  select(nome, nome_regiao_imediata),
+  by = "nome") 
+```
+
+
+
+```{r}
+pnae_resumo <- pnae %>% 
+  # filter(ano >= 2010, ano <= 2020) %>% 
+  # drop_na() %>% 
+  group_by(ano, nome_regiao_imediata, etapa_ensino) %>% 
+  summarise(
+    qt_alunos_pnae = sum(qt_alunos_pnae,na.rm=TRUE),
+    vl_total_escolas = sum(vl_total_escolas,na.rm=TRUE)
+  ) %>% 
+  pivot_wider(
+    names_from =  etapa_ensino,
+    values_from = c(qt_alunos_pnae,vl_total_escolas)) %>% 
+  group_by(nome_regiao_imediata) %>% 
+  mutate(
+    across(qt_alunos_pnae_CRECHE:`vl_total_escolas_ATENDIMENTO EDUCACIONAL ESPECIALIZADO (AEE)`, function(x) mean(x,na.rm=TRUE))) %>% 
+  janitor::clean_names() %>% 
+  filter(ano == 2007) %>% 
+  select(-ano)
+
+pnae_resumo <- pnae_resumo %>% 
+  select(-qt_alunos_pnae_ensino_medio,
+         -qt_alunos_pnae_indigena,
+         -qt_alunos_pnae_quilombola,
+         -vl_total_escolas_ensino_medio,
+         -vl_total_escolas_indigena,
+         -vl_total_escolas_quilombola
+         )
+nomes_antigos <- names(pnae_resumo)
+nomes_novos <- c(
+  "nome", "qt_creche", "qt_eja", "qt_fundamental",                         
+  "qt_pre_escola", "qt_aee", "vl_creche", "vl_eja",         
+  "vl_fundamental", "vl_pre_escola", "vl_aee")
+pnae_resumo <- pnae_resumo %>% 
+  rename_at(vars(nomes_antigos),~nomes_novos)
+
+pnae_resumo$valor_pnae_total <- pnae_resumo %>% 
+  rename(nome_regiao_imediata = nome) %>% 
+  ungroup() %>% 
+  select(starts_with("vl_")) %>% apply(.,1,sum)
+
+base_multivariada<-left_join(base_multivariada,
+          pnae_resumo %>% 
+            rename(nome_regiao_imediata = nome) %>% 
+            ungroup() %>% 
+            select(nome_regiao_imediata,valor_pnae_total),
+          by = "nome_regiao_imediata")
+visdat::vis_miss(base_multivariada)
+```
+### Base de dados - "sisvan"
+
+```{r}
+sisvan_estab <- read_rds("data/sisvan_estab.rds")
+sisvan <- sisvan_estab %>% 
+  group_by(municipio, ano) %>% 
+  summarise(
+    servico_nutricao_proprio = 
+      sum(indicador_servico_nutricao_proprio),
+    servico_nutricao_terceirizado =  
+      sum(indicador_servico_nutricao_terceirizado),
+    servico_lactario_proprio = 
+      sum(indicador_servico_lactario_proprio),                          servico_lactario_terceirizado = 
+      sum(indicador_servico_lactario_terceirizado),                     servico_banco_leite_proprio = 
+      sum(indicador_servico_banco_leite_proprio),                       servico_banco_leite_terceirizado=
+      sum(indicador_servico_banco_leite_terceirizado),
+    # total = trunc(n()/12)
+  ) %>% mutate(nome = municipio)
+
+sisvan_estab <- left_join(sisvan_estab %>% 
+                            mutate(nome = municipio), 
+                          df_nomes %>%
+                            select(nome, nome_regiao_imediata),
+                          by = "nome")
+```
+
+
+```{r}
+sisvan <- left_join(sisvan,
+                    df_nomes %>% 
+                      select(nome, nome_regiao_imediata),
+                    by = "nome")
+
+
+sisvan_resumo <- sisvan %>% 
+  group_by(nome_regiao_imediata, nome) %>% 
+  summarise(
+    snutrip = mean(servico_nutricao_proprio,na.rm=TRUE),
+    snutrit = mean(servico_nutricao_terceirizado,na.rm=TRUE), 
+    slacp = mean(servico_lactario_proprio,na.rm=TRUE),
+    slact = mean(servico_lactario_terceirizado,na.rm=TRUE), 
+    sbleitep = mean(servico_banco_leite_proprio,na.rm=TRUE),
+    sbleitet = mean(servico_banco_leite_terceirizado,na.rm=TRUE),
+  ) %>% 
+  group_by(nome_regiao_imediata) %>%
+  summarise(
+    snutrip = sum(snutrip,na.rm=TRUE),
+    snutrit = sum(snutrit,na.rm=TRUE), 
+    slacp = sum(slacp,na.rm=TRUE),
+    slact = sum(slact,na.rm=TRUE), 
+    sbleitep = sum(sbleitep,na.rm=TRUE),
+    sbleitet = sum(sbleitet,na.rm=TRUE),
+  ) 
+
+base_multivariada <- left_join(base_multivariada,
+          sisvan_resumo %>% 
+  select(nome_regiao_imediata,
+         sbleitep,sbleitet,slacp,slact),
+  by = "nome_regiao_imediata")
+visdat::vis_miss(base_multivariada)
+```
+### Base de Dados "Estado Nutricional"
+
+```{r}
+estado_nutricional <- read_rds("data/df_final.rds") %>% 
+  group_by(ano,fase_da_vida,idade,indice,municipio) %>% 
+  mutate(valor_p = valor/sum(valor)*100) %>% 
+  ungroup()
+```
+
+
+```{r}
+estado_nutricional <- left_join(estado_nutricional, 
+                                df_nomes %>% select(nome, id_municipio_6,nome_regiao_imediata) %>% 
+                       rename(id_municipio  = id_municipio_6),
+                     by = c("id_municipio")) %>% 
+  select(-regiao,-uf,-codigo_uf,-id_municipio,-municipio,-indice_cri,
+         -indice_ado,-valor) %>% relocate(ano,nome,nome_regiao_imediata) %>% 
+  pivot_wider(names_from = c(fase_da_vida, idade, indice, classe),
+              values_from = c(valor_p)) %>% 
+  janitor::clean_names()
+```
+
+
+```{r}
+estado_nutri_resumo <- estado_nutricional %>% 
+  group_by(nome) %>% 
+  mutate(across(crianca_0_4_peso_x_idade_muito_baixo:idoso_imc_sobrepeso,mean)) %>% 
+  filter(ano == 2017) %>% 
+  select(-ano)
+```
+
+
+```{r}
+# estado_nutri_resumo %>% names
+nomes_antigos <- names(estado_nutri_resumo)
+estado_nutri_resumo <- estado_nutri_resumo %>% 
+  rename_at(vars(nomes_antigos), ~novos_nomes)
+```
+
+
+```{r}
+consumo <- read_rds("data/consumo/consumo.rds")
+consumo <- left_join(consumo, df_nomes %>% select(nome, id_municipio_6, nome_regiao_imediata) %>% 
+                       rename(codigo_ibge = id_municipio_6) %>%
+                       mutate(codigo_ibge = as.numeric(codigo_ibge)),
+                     by = c("codigo_ibge"))
+
+consumo <- consumo %>% select(-faixa_etaria, -codigo_ibge, -municipio,
+                   -uf, -total, -monitorados) %>% 
+  filter(fase_da_vida != "entre-6-meses-23-meses")
+
+consumo <- consumo %>% 
+  pivot_wider(names_from = c(fase_da_vida,tipo_relatorio),
+              values_from = percent) %>% 
+  janitor::clean_names()
+consumo$nome_regiao_imediata %>% unique()
+```
+
+
+
+```{r}
+consumo_estado_nutricional <- left_join(consumo, estado_nutricional,
+          by=c("ano","nome","nome_regiao_imediata"))
+
+consumo_resumo <- consumo %>% 
+  group_by(nome_regiao_imediata, nome) %>% 
+  summarise(
+    adol_embut = mean(adolecentes_cons_embut,na.rm=TRUE),  
+    adol_ultra = mean(adolecentes_cons_ultra,na.rm=TRUE), 
+    adul_embut = mean(adultos_cons_embut,na.rm=TRUE), 
+    adul_ultra = mean(adultos_cons_ultra,na.rm=TRUE),     
+    cri24_embut = mean(criancas_2_4_cons_embut,na.rm=TRUE),
+    cri24_ultra = mean(criancas_2_4_cons_ultra,na.rm=TRUE), 
+    cri59_embut = mean(criancas_5_9_cons_embut,na.rm=TRUE),
+    cri59_ultra = mean(criancas_5_9_cons_ultra,na.rm=TRUE),
+    ido_embut = mean(idosos_cons_embut,na.rm=TRUE),      
+    ido_ultra = mean(idosos_cons_ultra,na.rm=TRUE)      
+  )
+
+consumo_estado_nutricional_resumo <- left_join(
+  estado_nutri_resumo %>% 
+    rename(nome_regiao_imediata = nome_regiao_intermediaria) %>% 
+  ungroup(), consumo_resumo %>% ungroup(),
+  by = c("nome","nome_regiao_imediata"))
+
+
+```
+
+
+```{r}
+consumo_estado_nutricional_resumo <- consumo_estado_nutricional_resumo %>%
+  group_by(nome_regiao_imediata) %>% 
+    mutate(across(where(is.numeric), function(x) {
+    mean(x,na.rm=TRUE)
+    }))  %>% select(-nome) %>% 
+  distinct() %>% ungroup()
+
+base_multivariada_final<-left_join(base_multivariada,
+          consumo_estado_nutricional_resumo %>% 
+  select(nome_regiao_imediata, cri04pxi_mb,cri04pxi_a,adolaxi_b,adolaxi_a,adulimc_b,adulimc_a,adulimc_obesg_i,adol_ultra,adul_ultra,cri59_ultra,ido_ultra),
+  by = "nome_regiao_imediata")
+
+visdat::vis_miss(base_multivariada_final)
+glimpse(base_multivariada_final)
+```
+
+
+
+# Análise Multivariada
+
+```{r}
+da <- base_multivariada_final #%>% 
+  # select(pbf_valor:valor_pnae_total,sbleitep,cri04pxi_mb,adulimc_obesg_i,
+  #        cri59_ultra,adul_ultra)
+
+da_pad <- decostand(da[-1] , 
+                      method = "standardize",
+                      na.rm=TRUE)
+row.names(da_pad) <- base_multivariada_final$nome_regiao_imediata
+da_pad_euc<-vegdist(da_pad,"euclidean",na.rm=TRUE) 
+da_pad_euc_ward<-hclust(da_pad_euc, method="ward.D")
+grupo<-cutree(da_pad_euc_ward,5)
+n_grupo <- length(unique(grupo))
+ggdendrogram(da_pad_euc_ward, rotate = TRUE, size = 2) 
+```
+
+```{r}
+cor_matrix <- cor(da_pad,use = "na.or.complete")
+corrplot(cor_matrix, method="ellipse")
+```
+
+
+```{r}
+
+da_pad <- da_pad %>% 
+  mutate(across(where(is.numeric), function(x) {
+    med <- mean(x,na.rm=TRUE)
+    x[is.na(x)] <- med
+    x
+  }))
+
+pca <-  prcomp(da_pad,
+               scale=T)
+df<- da_pad
+# Autovalores
+eig<-pca$sdev^2
+print(round(eig,3))
+ve<-eig/sum(eig)
+print(round(ve,4))
+print(round(cumsum(ve),4)*100)
+mcor<-cor(df,pca$x)
+corrplot(mcor)
+screeplot(pca)
+abline(h=1)
+pc1V<-cor(df,pca$x)[,1]/sd(cor(df,pca$x)[,1])
+pc2V<-cor(df,pca$x)[,2]/sd(cor(df,pca$x)[,2])
+pc3V<-cor(df,pca$x)[,3]/sd(cor(df,pca$x)[,3])
+pc1c<-pca$x[,1]/sd(pca$x[,1])
+pc2c<-pca$x[,2]/sd(pca$x[,2])
+pc3c<-pca$x[,3]/sd(pca$x[,3])
+nv<-ncol(df)
+```
+
+
+```{r}
+bip<-data.frame(pc1c,pc2c,pc3c,grupo=as.factor(grupo))
+texto <- data.frame(x = pc1V, y = pc2V,z = pc3V,label = names(df)
+)
+
+bip %>% 
+  ggplot(aes(x=pc1c, y=pc2c))+
+  geom_point() +
+  geom_point(aes(shape = grupo, color = grupo), size = 3) + theme_minimal()+
+  scale_shape_manual(values=16:(15+n_grupo)) +
+  scale_colour_brewer(palette = "Set1") +
+  geom_vline(aes(xintercept=0),
+             color="black", size=1) +
+  geom_hline(aes(yintercept=0),
+             color="black", size=1) +
+  annotate(geom="segment",
+           x=rep(0,length(df)),
+           xend=texto$x,
+           y=rep(0,length(df)),
+           yend=texto$y,color="black",lwd=.5) +
+  geom_label(data=texto,aes(x=x,y=y,label=label),
+             color="black",angle=0,fontface="bold",size=4,fill="white") +
+  labs(x=paste("CP1 (",round(100*ve[1],2),"%)",sep=""),
+       y=paste("CP2 (",round(100*ve[2],2),"%)",sep=""),
+       color="",shape="") +
+  theme(legend.position = "top") +
+  coord_cartesian(xlim=c(-2,3))
+```
+
+```{r}
+ck<-sum(pca$sdev^2>=1)
+tabelapca<-vector()
+for( l in 1:ck) tabelapca<-cbind(tabelapca,mcor[,l])
+colnames(tabelapca)<-paste(rep(c("PC"),ck),1:ck,sep="")
+pcat<-round(tabelapca,3)
+tabelapca<-tabelapca[order(abs(tabelapca[,1])),]
+print(tabelapca)
+```
+
+
+```{r}
+df_grupo <- data.frame(nome_regiao_imediata = row.names(da_pad), grupo)
+
+df_grupo <- left_join(df_nomes %>% 
+                      select(id_municipio, nome, nome_regiao_imediata),
+                      df_grupo,
+                      by ="nome_regiao_imediata")
+
+d_sf_municipio <- st_read("shp/35MUE250GC_SIR.shp", quiet = TRUE)
+
+d_sf_municipio <- d_sf_municipio %>%
+  rename(id_municipio = CD_GEOCMU) %>%
+  inner_join(df_grupo %>%
+               relocate(id_municipio), "id_municipio") %>% 
+  mutate(grupo = as.factor(grupo))
+
+ggplot(d_sf_municipio) +
+  geom_sf(aes(fill = grupo))+
+  theme_minimal() +
+  scale_fill_viridis_d()
+```
+
+
+```{r}
+n_grupo <- length(unique(grupo))
+nome <- row.names(da_pad)
+for(i in 1:n_grupo){
+  print("===============")
+  print(paste0("Grupo ",i,""))
+  print("===============")
+  print(paste(nome[grupo == i],collapse = "; "))
+  cat("\n")
+}
+```
+
+
+
+
+
